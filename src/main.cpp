@@ -20,7 +20,7 @@
 
 
 int main() {
-    std::cout << "Initialization..." << std::endl;
+    std::cout << "Initialization bitcoin miner..." << std::endl;
 
 
 
