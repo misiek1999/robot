@@ -16,7 +16,7 @@
  * 2 - EMERGENCY STOP   - stop the robot's movement, no continuation possible
  * 3 - CLOSE_PROGRAM    - close program, stop all thread
 */
-enum controller_state{
+enum class ControllerState{
     RUNNING = 0,
     STOP = 1,
     EMERGENCY_STOP = 2,
@@ -24,6 +24,6 @@ enum controller_state{
 };
 
 // Define global atomic variable
-extern std::atomic<controller_state> program_state;
+extern std::atomic<ControllerState> program_state;
 
 #endif //ROBOT_SUPERVISOR_H

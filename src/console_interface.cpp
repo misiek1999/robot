@@ -53,10 +53,45 @@ void select_trajectory_mode(){
         std::cout << "Selected  mode: Manual"<< std::endl;
 }
 
+
 /*
  * Function read data from queue and display it on console
  */
 void display_queue_messages(){
+
+
+
+}
+
+/*
+ * Message displayed after close program
+ */
+void close_console(){
+    std::cout <<"Program end."<<std::endl;
+}
+
+/*
+ * Display control instruction in manual mode in console
+ */
+void display_manual_instruction(){
+    // Display control instruction
+    std::cout <<"--------------------------------------"<<std::endl;
+    std::cout << "To move 1 joint press:  < [q] - [w] >"<<std::endl;
+    std::cout << "To move 2 joint press:  < [a] - [s] >"<<std::endl;
+    std::cout << "To move 3 joint press:  < [z] - [x] >"<<std::endl;
+    std::cout << "To write binary output press number from 1 to 8"<<std::endl;
+    // Disable console input display
+    struct termios termios;
+    tcgetattr(STDIN_FILENO, &termios);
+    termios.c_lflag &= ~ECHO;
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &termios);
+    termios .c_lflag &=~ECHOFLAGS;
+}
+
+/*
+ * Read control from console
+ */
+void read_control_from_console(){
 
 
 
@@ -75,11 +110,12 @@ std::string read_file_path_from_console(){
         // check file exist
         res = access(path_to_file.c_str(), R_OK);   //check file is exist
         if (res == 0)   // If res value is non-negative then path is correct
-            path_is_correct = true;
+            path_is_correct = true; // end loop when file exist
         else
             std::cout<<"Invalid path! Please specified valid path." <<std::endl;
     }
-    std::cout<<"Specified path is correct. Path: " <<path_to_file<<std::endl;
+    // Works only on unix system
+    std::cout<<"Specified path is correct. Path: \\e[3 " <<path_to_file<<" \\e[0m" <<std::endl;
     return path_to_file;
 }
 
@@ -93,28 +129,26 @@ void read_trajectory_from_file(std::string _path_to_file){
     file.open(_path_to_file);
     if (file.is_open()) // Check is file opened
     {
-        // temp iterator
-        size_t instr_itr = 0;
-        // temp instruction
-        TrajectoryInstruction temp_inst;
         // Lock trajectory instruction mutex
         trajectory_instruction_buffer_mutex.lock();
         // Try to read all structures from file
         while(file.good())
         {
-
-
+            // Read instructions from binary file
+            file.read((char*)&trajectory_instruction_buffer, sizeof(trajectory_instruction_buffer));
         }
-
         //Unlock the mutex when it has finished reading data from the file
         trajectory_instruction_buffer_mutex.unlock();
+        // Display message after successful read data from file
+        std::cout<< "File loaded successful! "<<std::endl;
     }
     else
     {
+        // Display error message and throw error
         std::cout<< "Error while opening file. Exit program"<<std::endl;
         throw std::runtime_error("error");
     }
-    file.close();   //Close file after complete read
+    file.close();   //Close file after completed read
 }
 
 /*
@@ -126,8 +160,15 @@ void console_communication_auto_mode(){
     std::string trajectory_path = read_file_path_from_console();
     // try to open file and read trajectory from file
     read_trajectory_from_file(trajectory_path);
-    // display queue data from other thread's
-
+    // Enter to infinity loop until the program is terminated
+    while(program_state != ControllerState::CLOSE_PROGRAM){
+        // display queue data from other thread's
+        display_queue_messages();
+        // Wait 10ms to next
+        usleep(10000);
+    }
+    // Display message after closing console
+    close_console();
 }
 
 /*
@@ -135,10 +176,19 @@ void console_communication_auto_mode(){
  * Displays messages from threads with higher priority, read console input
  */
 void console_communication_manual_mode(){
-//TODO: Implement this case
-
-
-
+    // Display console instruction in manual mode
+    display_manual_instruction();
+    // Enter to infinity loop until the program is terminated
+    while(program_state != ControllerState::CLOSE_PROGRAM){
+        // read control from console
+        read_control_from_console();
+        // display queue data from other thread's
+        display_queue_messages();
+        // Wait 10ms to next
+        usleep(10000);
+    }
+    // Display message after closing console
+    close_console();
 }
 
 

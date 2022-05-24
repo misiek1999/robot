@@ -3,3 +3,6 @@
 //
 
 #include "supervisor.h"
+
+// Global program state variable
+std::atomic<ControllerState> program_state;

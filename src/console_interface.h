@@ -14,6 +14,8 @@
 #include "unistd.h"
 #include "controll_interface.h"
 #include "trajectory_generator.h"
+#include "supervisor.h"
+#include "termios.h"
 // Global constance variable
  #define MAX_CONSOLE_MESSAGE_QUEUE_SIZE_BUFFER 128
 
@@ -23,5 +25,5 @@
 // Define function
 void console_interface();
 
-
+#define ECHOFLAGS (ECHO | ECHOE | ECHOK | ECHONL)
 #endif //ROBOT_CONSOLE_INTERFACE_H
