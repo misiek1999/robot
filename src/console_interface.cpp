@@ -2,21 +2,17 @@
 // Created by Ja on 18.05.2022.
 //
 
+
 #include "console_interface.h"
 
 /*
- * Define message queue from other thread's
+ * Define message queue to receive messages from other thread's
  * Read data from other thread and display message in console
- * When manual mode is selected, then read data from console and send it to the trajectory generator
  * This structure is default in posix message queue
  */
-struct console_message_data {
-    char buffer[MAX_CONSOLE_MESSAGE_QUEUE_SIZE_BUFFER];
-    int pointer;
-    pthread_cond_t empty_buffer;
-    pthread_cond_t full_buffer;
-    pthread_mutex_t mutex;
-} console_communication_stack;
+mqd_t	mes_to_console_queue;
+struct	mq_attr mes_to_console_queue_attr;
+
 
 /*
  * Function to select trajectory generator mode
@@ -43,6 +39,8 @@ void select_trajectory_mode(){
             correct_mode = true; //
         else
             std::cout<< "Invalid input. Try again.\n";
+        if (get_program_state() == ControllerState::CLOSE_PROGRAM)
+            return;
     }
     // Change char number to enum number
     robot_trajectory_mode = static_cast<Trajectory_control_type> (mode - 48);
@@ -56,11 +54,15 @@ void select_trajectory_mode(){
 
 /*
  * Function read data from queue and display it on console
+ * Inline function to reduce unnecessary calls
  */
-void display_queue_messages(){
-
-
-
+inline void display_queue_messages(){
+    // Create buffer for received message
+    meq_que_data_t buffer;
+    // Receive message from queue
+    mq_receive(mes_to_console_queue, (char *)&buffer, sizeof(meq_que_data_t), nullptr);
+    // Display message in console
+    printf("%s", buffer);
 }
 
 /*
@@ -70,6 +72,7 @@ void close_console(){
     std::cout <<"Program end."<<std::endl;
 }
 
+#define ECHOFLAGS (ECHO | ECHOE | ECHOK | ECHONL)   // Define flags for linux terminal
 /*
  * Display control instruction in manual mode in console
  */
@@ -81,6 +84,7 @@ void display_manual_instruction(){
     std::cout << "To move 3 joint press:  < [z] - [x] >"<<std::endl;
     std::cout << "To write binary output press number from 1 to 8"<<std::endl;
     // Disable console input display
+    // Works only on linux
     struct termios termios;
     tcgetattr(STDIN_FILENO, &termios);
     termios.c_lflag &= ~ECHO;
@@ -92,7 +96,7 @@ void display_manual_instruction(){
  * Read control from console
  */
 void read_control_from_console(){
-
+//TODO: write this function
 
 
 }
@@ -113,6 +117,9 @@ std::string read_file_path_from_console(){
             path_is_correct = true; // end loop when file exist
         else
             std::cout<<"Invalid path! Please specified valid path." <<std::endl;
+        // If program is shutdown, then return nullptr
+        if (get_program_state() == ControllerState::CLOSE_PROGRAM)
+            return std::string("");
     }
     // Works only on unix system
     std::cout<<"Specified path is correct. Path: \\e[3 " <<path_to_file<<" \\e[0m" <<std::endl;
@@ -158,10 +165,13 @@ void read_trajectory_from_file(std::string _path_to_file){
 void console_communication_auto_mode(){
     // Read path to predefined trajectory from console
     std::string trajectory_path = read_file_path_from_console();
+    // If program is shutdown before final setup, close function
+    if (get_program_state() == ControllerState::CLOSE_PROGRAM)
+        return;
     // try to open file and read trajectory from file
     read_trajectory_from_file(trajectory_path);
     // Enter to infinity loop until the program is terminated
-    while(program_state != ControllerState::CLOSE_PROGRAM){
+    while(get_program_state() != ControllerState::CLOSE_PROGRAM){
         // display queue data from other thread's
         display_queue_messages();
         // Wait 10ms to next
@@ -179,18 +189,17 @@ void console_communication_manual_mode(){
     // Display console instruction in manual mode
     display_manual_instruction();
     // Enter to infinity loop until the program is terminated
-    while(program_state != ControllerState::CLOSE_PROGRAM){
+    while(get_program_state()  != ControllerState::CLOSE_PROGRAM){
         // read control from console
         read_control_from_console();
         // display queue data from other thread's
         display_queue_messages();
-        // Wait 10ms to next
-        usleep(10000);
+        //        // Wait 10ms to next iteration
+        //        usleep(10000);
     }
     // Display message after closing console
     close_console();
 }
-
 
 /*
  * Function below display welcome message and is waiting for the appropriate mode to be specified
@@ -198,11 +207,6 @@ void console_communication_manual_mode(){
 void console_communication_initialization(){
     // Display welcome message
     std::cout <<"Welcome to robot trajectory generator!" <<std::endl;
-    // Initialization message queue stack
-    pthread_cond_init(&console_communication_stack.empty_buffer, nullptr);
-    pthread_cond_init(&console_communication_stack.full_buffer, nullptr);
-    pthread_mutex_init(&console_communication_stack.mutex, nullptr);
-    console_communication_stack.pointer = 0;
     // Select trajectory generation mode
     select_trajectory_mode();
 }
@@ -211,22 +215,23 @@ void console_communication_initialization(){
  * Function to communication with console
  * Initialise the data exchange between threads and set the necessary parameters
  */
-void console_interface(){
+void * console_interface(void *pVoid){
     //Initialize console
     console_communication_initialization();
-    // Select mode of communication
-    switch(robot_trajectory_mode)
-    {
-        case Trajectory_control_type::AUTO:     // Automatic mode case
-            console_communication_auto_mode();  // Select function to communication in auto mode
-            break;
-        case Trajectory_control_type::MANUAL:   // Manual mode case
-            console_communication_manual_mode();// Select function to communication in manual mode
-            break;
-        default: //Undefined case
-            std::cout<<"Undefined mode! Stop application."<<std::endl; // Display error message
-            throw std::runtime_error("error"); //Stop program
-    }
+    if (get_program_state() != ControllerState::CLOSE_PROGRAM)
+        // Select mode of communication
+        switch(robot_trajectory_mode)
+        {
+            case Trajectory_control_type::AUTO:     // Automatic mode case
+                console_communication_auto_mode();  // Select function to communication in auto mode
+                break;
+            case Trajectory_control_type::MANUAL:   // Manual mode case
+                console_communication_manual_mode();// Select function to communication in manual mode
+                break;
+            default: //Undefined case
+                std::cout<<"Undefined mode! Stop application."<<std::endl; // Display error message
+                throw std::runtime_error("error"); //Stop program
+        }
     // Display exit message
     std::cout<<"Exit program. Thank you for your root access!"<<std::endl;
 }

@@ -16,14 +16,24 @@
 #include "trajectory_generator.h"
 #include "supervisor.h"
 #include "termios.h"
+#include "mqueue.h"
+#include "sys/fcntl.h"
+#include "stdlib.h"
+
 // Global constance variable
  #define MAX_CONSOLE_MESSAGE_QUEUE_SIZE_BUFFER 128
 
 // Global message queue to console
- extern struct console_message_data console_communication_stack;
+ extern mqd_t	mes_to_console_queue;
+extern struct	mq_attr mes_to_console_queue_attr;
 
-// Define function
-void console_interface();
+// Message queue buffer type and queue size
+#define MAX_MESSAGES_IN_QUEUE 32
+typedef char meq_que_data_t[32];
 
-#define ECHOFLAGS (ECHO | ECHOE | ECHOK | ECHONL)
+// Define function which interface with console
+// Run this task on low priority thread
+void * console_interface(void *pVoid);
+
+
 #endif //ROBOT_CONSOLE_INTERFACE_H

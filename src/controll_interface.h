@@ -31,7 +31,7 @@ extern std::mutex current_robot_position_mutex;
 
 // Binary robot output and input
 extern robot_binary_interface_t output_binary;
-extern robot_binary_interface_t input_binary;
+    extern robot_binary_interface_t input_binary;
 
 /*
  * Global variable to check is manipulator reach setpoint position

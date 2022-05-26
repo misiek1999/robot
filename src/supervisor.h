@@ -23,7 +23,12 @@ enum class ControllerState{
     CLOSE_PROGRAM = 3
 };
 
-// Define global atomic variable
-extern std::atomic<ControllerState> program_state;
+// Get program state
+const ControllerState get_program_state();
+// Set program state
+void set_program_state(const ControllerState _state_to_set);
+
+//Supervisor thread function
+void * program_supervisor(void *pVoid);
 
 #endif //ROBOT_SUPERVISOR_H

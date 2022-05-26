@@ -15,6 +15,7 @@
 //Include libs
 #include "atomic"
 #include "mutex"
+#include "mqueue.h"
 /*
  * Enum include two state of robot trajectory generator
  * 0 - Undefined
@@ -43,6 +44,7 @@ extern std::atomic<Trajectory_control_type> robot_trajectory_mode;
  *  STOP,   //stop program
  *  EXIT    //exit program
  */
+
 enum class Trajectory_instruction_set{
     UNDEFINED = 0,  // Undefined instruction
     GO_PTP, // moves the robot arm in joint coordinates
@@ -84,5 +86,8 @@ struct TrajectoryInstruction
 extern TrajectoryInstruction trajectory_instruction_buffer[MAX_INSTRUCTION_PER_TRAJECTORY];
 // mutex for trajectory instruction buffer
 extern std::mutex trajectory_instruction_buffer_mutex;
+
+extern mqd_t mes_to_trajectory_queue;
+extern struct	mq_attr mes_to_trajectory_queue_attr;
 
 #endif //ROBOT_TRAJECTORY_GENERATOR_H
