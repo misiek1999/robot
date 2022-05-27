@@ -4,3 +4,4 @@ project(robot)
 set(CMAKE_CXX_STANDARD 17)
 
 add_executable(robot src/main.cpp src/robot_arm_params.h src/controll_interface.cpp src/controll_interface.h src/logger.cpp src/logger.h src/calculate_robot_position.cpp src/calculate_robot_position.h src/supervisor.cpp src/supervisor.h src/console_interface.cpp src/console_interface.h src/trajectory_generator.cpp src/trajectory_generator.h)
+target_link_libraries(robot pthread rt)

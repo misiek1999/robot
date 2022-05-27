@@ -14,13 +14,14 @@
 #include "mutex"
 #include "pthread.h"
 #include "signal.h"
-
+#include "stdlib.h"
 
 #include "supervisor.h"
 #include "controll_interface.h"
 #include "trajectory_generator.h"
 #include "console_interface.h"
 #include "logger.h"
+#include "mqueue.h"
 
 // Function to setup all message queue's in program
 // Return true is setup is completed or false when setup is failed
@@ -57,6 +58,7 @@ int main() {
     if (!launch_threads())// If initialization failed then stop application
         exit(EXIT_FAILURE);
 
+    
 
     log_string("Witam");
 
@@ -128,17 +130,17 @@ bool setup_all_mes_queues(){
     mes_to_console_queue_attr.mq_msgsize = sizeof(meq_que_data_t);  //Char buffer for 32 characters
     mes_to_console_queue_attr.mq_flags = O_NONBLOCK;
     // Create message queue
-    if ((mes_to_console_queue = mq_open("/mes_que_cons", O_CREAT | O_RDWR, 0644, &mes_to_console_queue_attr)) == -1) {
-        fprintf(stderr, "Creation of the mes queues failed\n");
+    if ((mes_to_console_queue = mq_open("/mesQueCons", O_CREAT | O_RDWR, 0644, &mes_to_console_queue_attr)) == -1) {
+        fprintf(stderr, "Creation of the mes queues failed 1\n");
         return false;
     }
     // Setup message queue from console to logger
     mes_to_logger_queue_attr.mq_maxmsg = MAX_MESSAGES_IN_QUEUE;    //Max 32 messages in queue
-    mes_to_logger_queue_attr.mq_msgsize = sizeof(log_mes_que_data_t);  //Char buffer for 32 characters
+    mes_to_logger_queue_attr.mq_msgsize = sizeof(meq_que_data_t);  //Char buffer for 32 characters
     mes_to_logger_queue_attr.mq_flags = O_NONBLOCK;
     // Create message queue
-    if ((mes_to_logger_queue = mq_open("/mes_que_log", O_CREAT | O_RDWR, 0644, &mes_to_logger_queue_attr)) == -1) {
-        fprintf(stderr, "Creation of the mes queues failed\n");
+    if ((mes_to_logger_queue = mq_open("/meqQueLog", O_CREAT | O_RDWR, 0644, &mes_to_logger_queue_attr)) == -1) {
+        fprintf(stderr, "Creation of the mes queues failed 2\n");
         return false;
     }
     // Setup message queue from console to trajectory
@@ -147,7 +149,7 @@ bool setup_all_mes_queues(){
     mes_to_trajectory_queue_attr.mq_flags = O_NONBLOCK;
     // Create message queue
     if ((mes_to_trajectory_queue = mq_open("/mes_que_traj", O_CREAT | O_RDWR, 0644, &mes_to_trajectory_queue_attr)) == -1) {
-        fprintf(stderr, "Creation of the mes queues failed\n");
+        fprintf(stderr, "Creation of the mes queues failed 3\n");
         return false;
     }
     // If setup is successful completed then return true

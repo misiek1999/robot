@@ -234,6 +234,7 @@ void * console_interface(void *pVoid){
         }
     // Display exit message
     std::cout<<"Exit program. Thank you for your root access!"<<std::endl;
+    return 0;
 }
 
 

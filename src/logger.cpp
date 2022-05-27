@@ -56,6 +56,7 @@ void * log_data_to_file(void *pVoid){
     }
     // Close file
     file_log.close();
+    return 0;
 }
 
 // Send message to log queue

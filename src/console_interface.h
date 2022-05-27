@@ -28,7 +28,7 @@
 extern struct	mq_attr mes_to_console_queue_attr;
 
 // Message queue buffer type and queue size
-#define MAX_MESSAGES_IN_QUEUE 32
+#define MAX_MESSAGES_IN_QUEUE 10
 typedef char meq_que_data_t[32];
 
 // Define function which interface with console

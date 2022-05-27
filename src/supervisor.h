@@ -7,7 +7,7 @@
 // Include liblaries
 #include "thread"
 #include "atomic"
-
+#include "iostream"
 /*
  * Define global enum of controller state
  * We define 4 state:
