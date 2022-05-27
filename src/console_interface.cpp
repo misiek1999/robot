@@ -57,19 +57,19 @@ void select_trajectory_mode(){
  * Inline function to reduce unnecessary calls
  */
 inline void display_queue_messages(){
-    // Create buffer for received message
-    meq_que_data_t buffer;
-    // Receive message from queue
-    mq_receive(mes_to_console_queue, (char *)&buffer, sizeof(meq_que_data_t), nullptr);
-    // Display message in console
-    printf("%s", buffer);
+//    // Create buffer for received message
+//    meq_que_data_t buffer;
+//    // Receive message from queue
+//    mq_receive(mes_to_console_queue, (char *)&buffer, sizeof(meq_que_data_t), nullptr);
+//    // Display message in console
+//    printf("%s", buffer);
 }
 
 /*
  * Message displayed after close program
  */
 void close_console(){
-    std::cout <<"Program end."<<std::endl;
+//    std::cout <<"Program end."<<std::endl;
 }
 
 #define ECHOFLAGS (ECHO | ECHOE | ECHOK | ECHONL)   // Define flags for linux terminal
@@ -97,6 +97,19 @@ void display_manual_instruction(){
  */
 void read_control_from_console(){
 //TODO: write this function
+    // Create temp variable fro income char
+    char read_char;
+    std::cin>>read_char;    // Read char from console
+    // Select right option
+    switch (read_char) {
+        case 'q':
+            set_program_state(ControllerState::CLOSE_PROGRAM);  // Close program after press 'q'
+            break;
+
+
+        default:
+            break;  // Do nothing after selectrin diffrent key;
+    }
 
 
 }

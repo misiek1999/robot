@@ -23,7 +23,7 @@ void log_string(const  char* str_to_log);
 // Logging data to file from message queue
 void * log_data_to_file(void *pVoid);
 
-
+extern std::ofstream file_log;
 
 #endif //ROBOT_LOGGER_H
 

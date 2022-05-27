@@ -19,6 +19,5 @@ void set_program_state(const ControllerState _state_to_set){
 
 // Supervisor thread function
 void * program_supervisor(void *pVoid){
-    std::cout << "Test";
     return 0;
 }
