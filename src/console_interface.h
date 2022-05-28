@@ -15,6 +15,7 @@
 #include "controll_interface.h"
 #include "trajectory_generator.h"
 #include "supervisor.h"
+#include "logger.h"
 #include "termios.h"
 #include "mqueue.h"
 #include "sys/fcntl.h"

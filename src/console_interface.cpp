@@ -45,10 +45,14 @@ void select_trajectory_mode(){
     // Change char number to enum number
     robot_trajectory_mode = static_cast<Trajectory_control_type> (mode - 48);
     // Display correct value
-    if (robot_trajectory_mode == Trajectory_control_type::AUTO)
-        std::cout << "Selected  mode: Auto"<< std::endl;
-    else
+    if (robot_trajectory_mode == Trajectory_control_type::AUTO) {
+        std::cout << "Selected  mode: Auto" << std::endl;
+        log_string("Selected mode : Auto");
+    }
+    else{
         std::cout << "Selected  mode: Manual"<< std::endl;
+        log_string("Selected mode : Manual");
+    }
 }
 
 
@@ -161,6 +165,9 @@ void read_trajectory_from_file(std::string _path_to_file){
         trajectory_instruction_buffer_mutex.unlock();
         // Display message after successful read data from file
         std::cout<< "File loaded successful! "<<std::endl;
+        char str[32];
+        sprintf(str,"Trajectory loaded from file: %s", _path_to_file.c_str());
+        log_string(str);
     }
     else
     {
@@ -229,6 +236,14 @@ void console_communication_initialization(){
  * Initialise the data exchange between threads and set the necessary parameters
  */
 void * console_interface(void *pVoid){
+    // Init thread priority
+    int policy;     //Scheduling policy: FIFO or RR
+    struct sched_param param;   //Structure of other thread parameters
+    /* Read modify and set new thread priority */
+    pthread_getschedparam( pthread_self(), &policy, &param);
+    param.sched_priority = sched_get_priority_min(policy);  // Read minimum value for thread priority
+    pthread_setschedparam( pthread_self(), policy+1, &param);   //set almost minimum thread priority for this thread
+
     //Initialize console
     console_communication_initialization();
     if (get_program_state() != ControllerState::CLOSE_PROGRAM)
@@ -249,5 +264,6 @@ void * console_interface(void *pVoid){
     std::cout<<"Exit program. Thank you for your root access!"<<std::endl;
     return 0;
 }
+
 
 

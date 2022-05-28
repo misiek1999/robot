@@ -30,6 +30,9 @@ bool setup_all_mes_queues();
 // Setup and run threads
 bool launch_threads();
 
+// Wait to joint other threads
+void wait_to_join_threads();
+
 // Thread variables
 pthread_t supervisor_thread;
 pthread_t control_thread;
@@ -67,17 +70,14 @@ int main() {
         sleep(1);
     }
 
+    // Wait to join all threads
+    wait_to_join_threads();
 
-    // Unlink all message queues
-//    mq_unlink((char*)mes_to_logger_queue);
-//    mq_unlink(mes_to_console_queue);
-//    mq_unlink(mes_to_trajectory_queue);
     // Close all message queue's
     mq_close(mes_to_logger_queue);
     mq_close(mes_to_console_queue);
     mq_close(mes_to_trajectory_queue);
 
-    file_log.close();
     std::cout<<"end."<<std::endl;
     return 0;
 }
@@ -155,4 +155,13 @@ bool setup_all_mes_queues(){
     }
     // If setup is successful completed then return true
     return true;
+}
+
+// Wait to joint other threads
+void wait_to_join_threads(){
+    pthread_join(supervisor_thread, nullptr);
+//    pthread_join(control_thread, nullptr);
+//    pthread_join(trajectory_thread, nullptr);
+    pthread_join(console_thread, nullptr);
+    pthread_join(log_thread, nullptr);
 }
