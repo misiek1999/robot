@@ -242,7 +242,7 @@ void * console_interface(void *pVoid){
     /* Read modify and set new thread priority */
     pthread_getschedparam( pthread_self(), &policy, &param);
     param.sched_priority = sched_get_priority_min(policy);  // Read minimum value for thread priority
-    pthread_setschedparam( pthread_self(), policy+1, &param);   //set almost minimum thread priority for this thread
+    pthread_setschedparam( pthread_self(), policy-1, &param);   //set almost minimum thread priority for this thread
 
     //Initialize console
     console_communication_initialization();
