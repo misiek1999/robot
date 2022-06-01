@@ -16,6 +16,12 @@
 #include "atomic"
 #include "mutex"
 #include "mqueue.h"
+#include "iostream"
+#include "errno.h"
+#include "string.h"
+#include "controll_interface.h"
+
+
 /*
  * Enum include two state of robot trajectory generator
  * 0 - Undefined
@@ -79,7 +85,6 @@ struct TrajectoryInstruction
     InstructionData data;// Data for each instruction
 };
 
-
 //Limit for instructions in buffer
 #define MAX_INSTRUCTION_PER_TRAJECTORY 128
 // Global instruction buffer
@@ -87,7 +92,21 @@ extern TrajectoryInstruction trajectory_instruction_buffer[MAX_INSTRUCTION_PER_T
 // mutex for trajectory instruction buffer
 extern std::mutex trajectory_instruction_buffer_mutex;
 
+// enum for instruction from console in manual mode
+enum ManualModeControlInstruction{
+    joint_1_right,
+    joint_1_left,
+    joint_2_right,
+    joint_2_left,
+    joint_3_right,
+    joint_3_left
+};
+// Message queue from console to trajectory generator in manual mode
 extern mqd_t mes_to_trajectory_queue;
 extern struct	mq_attr mes_to_trajectory_queue_attr;
+typedef ManualModeControlInstruction mq_traj_manual_data_t;
+
+// Function to send message with instruction to trajectory generator in manual mode
+void send_manual_control(ManualModeControlInstruction _instruction);
 
 #endif //ROBOT_TRAJECTORY_GENERATOR_H

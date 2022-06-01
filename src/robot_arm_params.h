@@ -20,13 +20,14 @@ struct Manipulator_position{
 // Robot joint definition
 #define NUMBER_OF_ROBOT_JOINT 3 // Number of robot joints
 typedef float robot_joint_position_t [NUMBER_OF_ROBOT_JOINT]; //Joint position array, unit in deg or cm, depends on joint type
+// Array with min and max value for each joint
+const float ROBOT_JOINT_LIMIT_ARRAY[NUMBER_OF_ROBOT_JOINT][2] =
+        {{-90, 90}, {-90, 90}, {-90, 90}};
 typedef std::uint8_t robot_digital_data_type;                    // Robot universal input/output digital data type
 typedef std::atomic <robot_digital_data_type> robot_binary_interface_t; // Atomic robot digital interface
 // First joint
 #define ARM_1_LENGTH 12.0f          // Length of first arm of robot [cm]
 #define MOTOR_1_SPEED_DEG 2.83f     // Speed of first motor [ms/deg]
-#define MOTOR_1_MIN_DEG -90.0f      // Minimal angle of motor 1
-#define MOTOR_1_MAX_DEG 90.0f       // Maximum angle of motor 1
 #define MOTOR_1_OFFSET 90.0f        // Offset of motor 1
 
 // Second joint
@@ -34,5 +35,8 @@ typedef std::atomic <robot_digital_data_type> robot_binary_interface_t; // Atomi
 
 // Third joint
 #define ARM_3_LENGTH 8.0f          // Length of third arm of robot [cm]
+
+// Tolerance of error robot joint positions
+#define ROBOT_JOINT_POSITION_TOLERANCE 0.5f
 
 #endif //ROBOT_ROBOT_ARM_PARAMS_H

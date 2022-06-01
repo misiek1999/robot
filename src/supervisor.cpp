@@ -5,15 +5,15 @@
 #include "supervisor.h"
 
 // Program state variable
-std::atomic <ControllerState> program_state;
+std::atomic <ProgramState> program_state;
 
 // Get program state
-const ControllerState get_program_state(){
+const ProgramState get_program_state(){
     return program_state;
 }
 
 // Set program state
-void set_program_state(const ControllerState _state_to_set){
+void set_program_state(const ProgramState _state_to_set){
     program_state = _state_to_set;
 }
 

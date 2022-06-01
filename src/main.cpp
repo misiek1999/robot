@@ -33,6 +33,14 @@ bool launch_threads();
 // Wait to joint other threads
 void wait_to_join_threads();
 
+// Variables to timer
+/* Structure with time values */
+struct itimerspec timer_control_spec;
+/* Timer variable */
+timer_t	timer_to_control;
+/* Signal variable */
+struct sigevent timer_control_signal;
+
 // Thread variables
 pthread_t supervisor_thread;
 pthread_t control_thread;
@@ -61,12 +69,11 @@ int main() {
     if (!launch_threads())// If initialization failed then stop application
         exit(EXIT_FAILURE);
 
-    
 
-    log_string("Witam");
+    write_to_log("Witam");
 
 
-    while (get_program_state() != ControllerState::CLOSE_PROGRAM){
+    while (get_program_state() != ProgramState::CLOSE_PROGRAM){
         sleep(1);
     }
 
@@ -106,9 +113,28 @@ bool launch_threads(){
         fprintf(stderr, "Cannot create thread.\n");
         return false;
     }
-//    if ((thread_create_status = pthread_create( &control_thread, &control_thread_attr, , nullptr))) {
-//        fprintf(stderr, "Cannot create thread.\n");
-//        return false;
+    // Try to launch control thread with timer interrupt
+    /* Initialize event to send signal SIGRTMAX */
+    timer_control_signal.sigev_notify = SIGEV_THREAD;
+    timer_control_signal.sigev_notify_function = reinterpret_cast<void (*)(sigval_t)>(communicate_with_robot);
+    timer_control_signal.sigev_notify_attributes = &control_thread_attr;
+
+    int status; // status for timer create
+    /* Create timer */
+    if ((status = timer_create(CLOCK_REALTIME, &timer_control_signal, &timer_to_control))) {
+        fprintf(stderr, "Error creating timer : %d\n", status);
+        return false;
+    }
+
+    /* Set up timer structure with time parameters */
+    timer_control_spec.it_value.tv_sec = 0;
+    timer_control_spec.it_value.tv_nsec = 20000000;//20ms timer expiration
+    timer_control_spec.it_interval.tv_sec = 0;
+    timer_control_spec.it_interval.tv_nsec = 20000000;//20ms time to next interrupt
+
+    /* Change timer parameters and run */
+    timer_settime( timer_to_control, 0, &timer_control_spec, NULL);
+
 //    }
 //    if ((thread_create_status = pthread_create( &t, &supervisor_thread_attr, program_supervisor, nullptr))) {
 //        fprintf(stderr, "Cannot create thread.\n");
@@ -130,7 +156,7 @@ bool launch_threads(){
 bool setup_all_mes_queues(){
     // Setup message queue from trajectory to console
     mes_to_console_queue_attr.mq_maxmsg = MAX_MESSAGES_IN_QUEUE;    //Max 32 messages in queue
-    mes_to_console_queue_attr.mq_msgsize = sizeof(meq_que_data_t);  //Char buffer for 32 characters
+    mes_to_console_queue_attr.mq_msgsize = sizeof(mq_consol_data_t);  //Char buffer for 32 characters
     // Create message queue
     if ((mes_to_console_queue = mq_open("/mesQueCons2", O_CREAT | O_RDWR| O_NONBLOCK, 0644, &mes_to_console_queue_attr)) == -1) {
         fprintf(stderr, "Creation of the mes queues failed 1\n");
@@ -138,7 +164,7 @@ bool setup_all_mes_queues(){
     }
     // Setup message queue from console to logger
     mes_to_logger_queue_attr.mq_maxmsg = MAX_MESSAGES_IN_QUEUE;    //Max 32 messages in queue
-    mes_to_logger_queue_attr.mq_msgsize = sizeof(log_mes_que_data_t);  //Char buffer for 32 characters
+    mes_to_logger_queue_attr.mq_msgsize = sizeof(mq_log_data_t);  //Char buffer for 32 characters
 //    mes_to_logger_queue_attr.mq_flags = O_NONBLOCK;
     // Create message queue
     if ((mes_to_logger_queue = mq_open("/meqQueLog2", O_CREAT | O_RDWR , 0644, &mes_to_logger_queue_attr)) == -1) {
@@ -147,7 +173,7 @@ bool setup_all_mes_queues(){
     }
     // Setup message queue from console to trajectory
     mes_to_trajectory_queue_attr.mq_maxmsg = MAX_MESSAGES_IN_QUEUE;    //Max 32 messages in queue
-    mes_to_trajectory_queue_attr.mq_msgsize = sizeof(meq_que_data_t);  //Char buffer for 32 characters
+    mes_to_trajectory_queue_attr.mq_msgsize = sizeof(mq_traj_manual_data_t);  //Char buffer for 32 characters
     // Create message queue
     if ((mes_to_trajectory_queue = mq_open("/mes_que_traj2", O_CREAT | O_RDWR| O_NONBLOCK, 0644, &mes_to_trajectory_queue_attr)) == -1) {
         fprintf(stderr, "Creation of the mes queues failed 3\n");
@@ -160,7 +186,7 @@ bool setup_all_mes_queues(){
 // Wait to joint other threads
 void wait_to_join_threads(){
     pthread_join(supervisor_thread, nullptr);
-//    pthread_join(control_thread, nullptr);
+    pthread_join(control_thread, nullptr);
 //    pthread_join(trajectory_thread, nullptr);
     pthread_join(console_thread, nullptr);
     pthread_join(log_thread, nullptr);

@@ -20,6 +20,7 @@
 #include "mqueue.h"
 #include "sys/fcntl.h"
 #include "stdlib.h"
+#include "math.h"
 
 // Global constance variable
  #define MAX_CONSOLE_MESSAGE_QUEUE_SIZE_BUFFER 128
@@ -30,7 +31,7 @@ extern struct	mq_attr mes_to_console_queue_attr;
 
 // Message queue buffer type and queue size
 #define MAX_MESSAGES_IN_QUEUE 10
-typedef char meq_que_data_t[32];
+typedef char mq_consol_data_t[32];
 
 // Define function which interface with console
 // Run this task on low priority thread

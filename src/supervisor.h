@@ -16,7 +16,7 @@
  * 2 - EMERGENCY STOP   - stop the robot's movement, no continuation possible
  * 3 - CLOSE_PROGRAM    - close program, stop all thread
 */
-enum class ControllerState{
+enum class ProgramState{
     RUNNING = 0,
     STOP = 1,
     EMERGENCY_STOP = 2,
@@ -24,9 +24,9 @@ enum class ControllerState{
 };
 
 // Get program state
-const ControllerState get_program_state();
+const ProgramState get_program_state();
 // Set program state
-void set_program_state(const ControllerState _state_to_set);
+void set_program_state(const ProgramState _state_to_set);
 
 //Supervisor thread function
 void * program_supervisor(void *pVoid);

@@ -39,7 +39,7 @@ void select_trajectory_mode(){
             correct_mode = true; //
         else
             std::cout<< "Invalid input. Try again.\n";
-        if (get_program_state() == ControllerState::CLOSE_PROGRAM)
+        if (get_program_state() == ProgramState::CLOSE_PROGRAM)
             return;
     }
     // Change char number to enum number
@@ -47,11 +47,11 @@ void select_trajectory_mode(){
     // Display correct value
     if (robot_trajectory_mode == Trajectory_control_type::AUTO) {
         std::cout << "Selected  mode: Auto" << std::endl;
-        log_string("Selected mode : Auto");
+        write_to_log("Selected mode : Auto");
     }
     else{
         std::cout << "Selected  mode: Manual"<< std::endl;
-        log_string("Selected mode : Manual");
+        write_to_log("Selected mode : Manual");
     }
 }
 
@@ -62,9 +62,9 @@ void select_trajectory_mode(){
  */
 inline void display_queue_messages(){
 //    // Create buffer for received message
-//    meq_que_data_t buffer;
+//    mq_consol_data_t buffer;
 //    // Receive message from queue
-//    mq_receive(mes_to_console_queue, (char *)&buffer, sizeof(meq_que_data_t), nullptr);
+//    mq_receive(mes_to_console_queue, (char *)&buffer, sizeof(mq_consol_data_t), nullptr);
 //    // Display message in console
 //    printf("%s", buffer);
 }
@@ -87,8 +87,8 @@ void display_manual_instruction(){
     std::cout << "To move 2 joint press:  < [a] - [s] >"<<std::endl;
     std::cout << "To move 3 joint press:  < [z] - [x] >"<<std::endl;
     std::cout << "To write binary output press number from 1 to 8"<<std::endl;
+    std::cout << "Press 'c' to exit"<<std::endl;
     // Disable console input display
-    // Works only on linux
     struct termios termios;
     tcgetattr(STDIN_FILENO, &termios);
     termios.c_lflag &= ~ECHO;
@@ -100,22 +100,41 @@ void display_manual_instruction(){
  * Read control from console
  */
 void read_control_from_console(){
-//TODO: write this function
-    // Create temp variable fro income char
+    // Create temp variable for income char
     char read_char;
-    std::cin>>read_char;    // Read char from console
+    //TODO: fix this to get char without pressing enter
+    read_char = getchar();    // Read char from console
     // Select right option
     switch (read_char) {
-        case 'q':
-            set_program_state(ControllerState::CLOSE_PROGRAM);  // Close program after press 'q'
+        case 'c':
+            set_program_state(ProgramState::CLOSE_PROGRAM);  // Close program after press 'q'
             break;
-
-
+        case 'q':
+            send_manual_control(ManualModeControlInstruction::joint_1_left);  // Turn 1 joint
+            break;
+        case 'w':
+            send_manual_control(ManualModeControlInstruction::joint_1_right);  // Turn 1 joint
+            break;
+        case 'a':
+            send_manual_control(ManualModeControlInstruction::joint_2_left);  // Turn 2 joint
+            break;
+        case 's':
+            send_manual_control(ManualModeControlInstruction::joint_2_right);   // Turn 2 joint
+            break;
+        case 'z':
+            send_manual_control(ManualModeControlInstruction::joint_3_left);   // Turn 3 joint
+            break;
+        case 'x':
+            send_manual_control(ManualModeControlInstruction::joint_3_right);   // Turn 3 joint
+            break;
+        // If input is number from 1 to 8 then change robot digital output
+        case 49 ... 56:
+            // change number from 1 ... 8 to powers of 2
+            write_digital_output((uint8_t) pow(read_char - 48,2));
+            break;
         default:
-            break;  // Do nothing after selectrin diffrent key;
+            break;  // Do nothing after selecting undefined key;
     }
-
-
 }
 
 /*
@@ -135,7 +154,7 @@ std::string read_file_path_from_console(){
         else
             std::cout<<"Invalid path! Please specified valid path." <<std::endl;
         // If program is shutdown, then return nullptr
-        if (get_program_state() == ControllerState::CLOSE_PROGRAM)
+        if (get_program_state() == ProgramState::CLOSE_PROGRAM)
             return std::string("");
     }
     // Works only on unix system
@@ -167,7 +186,7 @@ void read_trajectory_from_file(std::string _path_to_file){
         std::cout<< "File loaded successful! "<<std::endl;
         char str[32];
         sprintf(str,"Trajectory loaded from file: %s", _path_to_file.c_str());
-        log_string(str);
+        write_to_log(str);
     }
     else
     {
@@ -186,12 +205,12 @@ void console_communication_auto_mode(){
     // Read path to predefined trajectory from console
     std::string trajectory_path = read_file_path_from_console();
     // If program is shutdown before final setup, close function
-    if (get_program_state() == ControllerState::CLOSE_PROGRAM)
+    if (get_program_state() == ProgramState::CLOSE_PROGRAM)
         return;
     // try to open file and read trajectory from file
     read_trajectory_from_file(trajectory_path);
     // Enter to infinity loop until the program is terminated
-    while(get_program_state() != ControllerState::CLOSE_PROGRAM){
+    while(get_program_state() != ProgramState::CLOSE_PROGRAM){
         // display queue data from other thread's
         display_queue_messages();
         // Wait 10ms to next
@@ -209,7 +228,7 @@ void console_communication_manual_mode(){
     // Display console instruction in manual mode
     display_manual_instruction();
     // Enter to infinity loop until the program is terminated
-    while(get_program_state()  != ControllerState::CLOSE_PROGRAM){
+    while(get_program_state() != ProgramState::CLOSE_PROGRAM){
         // read control from console
         read_control_from_console();
         // display queue data from other thread's
@@ -246,7 +265,7 @@ void * console_interface(void *pVoid){
 
     //Initialize console
     console_communication_initialization();
-    if (get_program_state() != ControllerState::CLOSE_PROGRAM)
+    if (get_program_state() != ProgramState::CLOSE_PROGRAM)
         // Select mode of communication
         switch(robot_trajectory_mode)
         {
