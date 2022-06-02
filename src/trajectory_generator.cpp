@@ -38,7 +38,7 @@ void send_manual_control(ManualModeControlInstruction _instruction){
     int status = mq_send(mes_to_trajectory_queue, (const char *)&_instruction, sizeof(mq_traj_manual_data_t), 0);
     // Catch error code
     if (status < 0 )
-        std::cerr<<"MQ SEND ERROR: "<<status<<" -> "<< strerror(errno) <<std::endl;
+        std::cerr<<"MQ TRJ SEND ERROR: "<<status<<" -> "<< strerror(errno) <<std::endl;
 }
 
 // Read message from message queue every 10ms

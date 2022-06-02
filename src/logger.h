@@ -16,7 +16,7 @@
 // Message queue with data to save into file
 extern mqd_t mes_to_logger_queue;   // Message queue
 extern struct	mq_attr mes_to_logger_queue_attr;
-typedef char mq_log_data_t[40];    // received data type
+typedef char mq_log_data_t[48];    // received data type
 
 // Function to send string to log
 void write_to_log(const  char* str_to_log);

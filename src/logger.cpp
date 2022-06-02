@@ -17,8 +17,7 @@ std::string get_time_in_string(){
     time_t curr_time;
     tm * curr_tm;
     time(&curr_time);
-    //TODO: Isnieje ryzyko że ta funkcja zawiesi się na wielowątkowym wywołaniu bo korzysta ze zmiennych statycznych
-    curr_tm = localtime(&curr_time);
+    curr_tm = localtime(&curr_time);    //dont use locatime in other threads
     char time_str[32];
     strftime(time_str, 32, "%H:%M:%S -%d.%m.%Y", curr_tm);
     return std::string(time_str);
@@ -30,8 +29,7 @@ void log_init(){
     time_t curr_time;
     tm * curr_tm;
     time(&curr_time);
-    //TODO: Isnieje ryzyko że ta funkcja zawiesi się na wielowątkowym wywołaniu bo korzysta ze zmiennych statycznych
-    curr_tm = localtime(&curr_time);
+    curr_tm = localtime(&curr_time);//dont use locatime in other threads
     char file_name[32];
     // Format string from date
     strftime(file_name, 32, "log_%H%M_%d%m%Y.log", curr_tm);
@@ -73,7 +71,6 @@ void * log_data_to_file(void *pVoid){
     param.sched_priority = sched_get_priority_min(policy);  // Read minimum value for thread priority
     pthread_setschedparam( pthread_self(), policy, &param);   //set minimum thread priority for this thread
 
-
     // Initialization of logging
     log_init();
     // Enter to loop until the end of the programme
@@ -92,5 +89,5 @@ void write_to_log(const  char* str_to_log){
     int status = mq_send(mes_to_logger_queue, (const char *)&str_to_log[0], sizeof(mq_log_data_t), 0);
     // Catch error code
     if (status < 0 )
-        std::cerr<<"MQ SEND ERROR: "<<status<<" -> "<< strerror(errno) <<std::endl;
+        std::cerr<<"MQ LOG SEND ERROR: "<<status<<" -> "<< strerror(errno) <<std::endl;
 }

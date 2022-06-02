@@ -5,12 +5,27 @@
 // UDP protocol is used in this implementation
 #include "controll_interface.h"
 // Define posix variables used to communicate with robot using UDP
-// UDP socket
-struct sockaddr_in socket_udp_control_addr; //udp communication params
-int control_socket; //socket for udp communication
-int addr_length;
-#define UDP_CONTROL_PORT 22222
-#define UDP_CONTROL_ADDRESS 0x7fffffff
+#define UDP_CONTROL_PORT_RECEIVE 22222
+#define UDP_CONTROL_PORT_SEND 22223
+
+// UDP socket send
+struct sockaddr_in socket_udp_control_send_addr; //udp communication params to send packet
+int control_socket_send; //socket for udp communication
+socklen_t addr_length_send;
+
+// UDP socket receive
+struct sockaddr_in socket_udp_control_receive_addr; //udp communication params to send packet
+struct sockaddr server_addr;
+int control_socket_receive; //socket for udp communication
+socklen_t addr_length_receive;
+
+// Variables to timer
+/* Structure with time values */
+struct itimerspec timer_control_spec;
+/* Timer variable */
+timer_t	timer_to_control;
+/* Signal variable */
+struct sigevent timer_control_signal;
 
 // Robot position & coresponding mutex's
 robot_joint_position_t setpoint_robot_position;
@@ -32,36 +47,62 @@ std::mutex is_manipulator_reach_setpoint_position_mutex;
 
 // Initialize communication with robot or simulator
 void initialize_robot_communication(){
-    // Create socket using UDP
-    control_socket = socket(PF_INET, SOCK_DGRAM, 0);
+    // Create socket using UDP to send packet
+    control_socket_send = socket(PF_INET, SOCK_DGRAM, 0);
     // Check is socket create property
-    if (control_socket == -1) {
+    if (control_socket_send == -1) {
 
-        write_to_log("Cannot create socket UDP");
-        throw std::runtime_error("Error during create socket");
+        write_to_log("Cannot create send socket UDP");
+        throw std::runtime_error("Error during create send socket");
     }
     // Initialize socket address to 0
-    memset(&socket_udp_control_addr, 0, sizeof(socket_udp_control_addr));
+    memset(&socket_udp_control_send_addr, 0, sizeof(socket_udp_control_send_addr));
     // Set socket address parameters
-    socket_udp_control_addr.sin_family = AF_INET; //set IPV4 protocol
-    socket_udp_control_addr.sin_port = htons(UDP_CONTROL_PORT); // set udp port
-    socket_udp_control_addr.sin_addr.s_addr = INADDR_ANY;   // bind to all address
+    socket_udp_control_send_addr.sin_family = AF_INET; //set IPV4 protocol
+    socket_udp_control_send_addr.sin_port = htons(UDP_CONTROL_PORT_SEND); // set udp port
+    socket_udp_control_send_addr.sin_addr.s_addr = INADDR_ANY;//INADDR_BROADCAST;   // bind to all address
+
+    // Create socket using UDP to receive packet
+    control_socket_receive = socket(AF_INET, SOCK_DGRAM, 0);
+    // Check is socket create property
+    if (control_socket_receive == -1) {
+
+        write_to_log("Cannot create received socket UDP ");
+        throw std::runtime_error("Error during create received socket");
+    }
+    // Initialize socket address to 0
+    memset(&socket_udp_control_receive_addr, 0, sizeof(socket_udp_control_receive_addr));
+    // Set socket address parameters
+    socket_udp_control_receive_addr.sin_family = AF_INET; //set IPV4 protocol
+    socket_udp_control_receive_addr.sin_port = htons(UDP_CONTROL_PORT_RECEIVE); // set udp port
+    socket_udp_control_receive_addr.sin_addr.s_addr = INADDR_ANY;   // bind to all address
+    // Bind socket to socket address struct
+    if(bind(control_socket_receive, (struct sockaddr *)&socket_udp_control_receive_addr,
+            sizeof(socket_udp_control_receive_addr)) == -1) {
+        close(control_socket_receive);
+        std::cerr<<"Cannot bind socket"<<std::endl;
+        throw std::runtime_error("cannot bind socket");
+    }
+    addr_length_receive = sizeof(server_addr);
+
 }
 
-// close robot connection
+// close robot connection sockets
 void close_robot_communication(){
-    close(control_socket);
+    close(control_socket_send);
+    close(control_socket_receive);
 }
 
 // Read robot joint position and controll signals
-void read_robot_position(){
+void receive_robot_position_packet(){
     PacketToReceive received_packet;
     // receive feedback message from robot
-    ssize_t status= recvfrom(control_socket,  &received_packet, sizeof(PacketToReceive), MSG_WAITALL,
-                     (struct sockaddr *) &socket_udp_control_addr, &addr_length);
+    ssize_t status= recvfrom(control_socket_receive, &received_packet, sizeof(PacketToReceive),
+                             MSG_WAITALL,&server_addr, &addr_length_receive);
     // check is message is not received property
     if (status < 0){
-        write_to_log("Cannot received packet");
+//        write_to_log("Cannot received packet");
+        std::cerr<<"cannot receive packet udp"<<std::endl;
     }else{  //if received packet is correct
         // create variable for current position and digital input
         robot_digital_data_type digit_in;
@@ -77,22 +118,23 @@ void read_robot_position(){
 }
 
 // Write robot position to reach
-void write_robot_position(){
+void send_robot_position_packet(){
     // Packet to send
     PacketToSend packet_to_send;
     // create variable for setpoint position and digital output
     robot_joint_position_t set_pos_out;
     robot_digital_data_type digit_out;
-    // read joint setpoint position and digital output
+    // read setpoint joint position and digital output
     get_setpoint_robot_position(packet_to_send.setpoint_position);
     digit_out = robot_input_binary;
     packet_to_send.send_digital_signals = digit_out;
     // send packet to robot or simulator using UDP
-    ssize_t status = sendto(control_socket, &packet_to_send, sizeof(PacketToSend), 0x800	,// MSG_CONFIRM value
-                            (const struct sockaddr *) &socket_udp_control_addr, sizeof(socket_udp_control_addr));
+    ssize_t status = sendto(control_socket_send, &packet_to_send, sizeof(packet_to_send), 0x800	,// MSG_CONFIRM value
+                            (const struct sockaddr *) &socket_udp_control_send_addr, sizeof(socket_udp_control_send_addr));
     // check is message is not sent property
     if (status < 0){
-        write_to_log("Cannot send packet");
+//        write_to_log("Cannot send packet");
+        std::cerr << "cannot save to log"<<std::endl;
     }
 }
 
@@ -102,19 +144,55 @@ void* communicate_with_robot(void* _arg_input) {
     // Init thread priority
     int policy;     //Scheduling policy: FIFO or RR
     struct sched_param param;   //Structure of other thread parameters
+
     /* Read modify and set new thread priority */
     pthread_getschedparam( pthread_self(), &policy, &param);
     param.sched_priority = sched_get_priority_max(policy);  // Read minimum value for thread priority
-    pthread_setschedparam( pthread_self(), policy+1, &param);   //set max+1 thread priority for this thread
+    pthread_setschedparam( pthread_self(), policy+2, &param);   //set max+1 thread priority for this thread
+
     // Initialize communication with robot
     initialize_robot_communication();
-    // Enter to infinite loop until close program
-    //TODO: implement this function
-    while(get_program_state() != ProgramState::CLOSE_PROGRAM){
 
+    //Init thread to send packet every 20ms
+    pthread_attr_t send_packet_thread_attr;
+    pthread_attr_init(&send_packet_thread_attr);
+    pthread_attr_setschedpolicy(&send_packet_thread_attr, SCHED_FIFO);
 
+    // Init timer to send udp packet every 20ms
+    // Try to launch control thread with timer interrupt
+    /* Initialize event to send signal SIGRTMAX */
+    timer_control_signal.sigev_notify = SIGEV_THREAD;
+    timer_control_signal.sigev_notify_function = reinterpret_cast<void (*)(sigval_t)>(send_robot_position_packet);
+    timer_control_signal.sigev_notify_attributes = &send_packet_thread_attr;
+
+    int status; // status for timer create
+    /* Create timer */
+    if ((status = timer_create(CLOCK_REALTIME, &timer_control_signal, &timer_to_control))) {
+        fprintf(stderr, "Error creating timer : %d\n", status);
+        throw std::runtime_error("Cannot crate timer");
     }
 
+    /* Set up timer structure with time parameters */
+    timer_control_spec.it_value.tv_sec = 0;
+    timer_control_spec.it_value.tv_nsec = 20000000;//20ms timer expiration
+    timer_control_spec.it_interval.tv_sec = 0;
+    timer_control_spec.it_interval.tv_nsec = 20000000;//20ms time to next interrupt
+
+    /* Change timer parameters and run */
+    timer_settime( timer_to_control, 0, &timer_control_spec, NULL);
+
+    // Enter to infinite loop until close program to receive packet with timeout 10ms
+    while(get_program_state() != ProgramState::CLOSE_PROGRAM){  //stop if program is shutdown
+        receive_robot_position_packet();    // Try to receive udp packet with 10ms timeout
+        //TODO: implement rest of this loop
+    }
+    //stop timer
+    timer_control_spec.it_value.tv_nsec = 0;//set timer value to 0 to stop timer
+    timer_control_spec.it_interval.tv_nsec = 0;
+    timer_settime( timer_to_control, 0, &timer_control_spec, NULL);
+
+    //close socket and other communication with robot
+    close_robot_communication();
     return 0;
 }
 

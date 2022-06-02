@@ -33,13 +33,8 @@ bool launch_threads();
 // Wait to joint other threads
 void wait_to_join_threads();
 
-// Variables to timer
-/* Structure with time values */
-struct itimerspec timer_control_spec;
-/* Timer variable */
-timer_t	timer_to_control;
-/* Signal variable */
-struct sigevent timer_control_signal;
+// close all message queues
+void close_all_mes_queues();
 
 // Thread variables
 pthread_t supervisor_thread;
@@ -54,6 +49,10 @@ pthread_attr_t trajectory_thread_attr;
 pthread_attr_t console_thread_attr;
 pthread_attr_t log_thread_attr;
 
+// Message queues variable
+char mes_que_name_1[20] = "/mesQueCons2";
+char mes_que_name_2[20] = "/meqQueLog2";
+char mes_que_name_3[20] = "/mes_que_traj2";
 // Main function
 int main() {
     // Clear console buffer
@@ -81,9 +80,7 @@ int main() {
     wait_to_join_threads();
 
     // Close all message queue's
-    mq_close(mes_to_logger_queue);
-    mq_close(mes_to_console_queue);
-    mq_close(mes_to_trajectory_queue);
+    void close_all_mes_queues();
 
     std::cout<<"end."<<std::endl;
     return 0;
@@ -113,27 +110,10 @@ bool launch_threads(){
         fprintf(stderr, "Cannot create thread.\n");
         return false;
     }
-    // Try to launch control thread with timer interrupt
-    /* Initialize event to send signal SIGRTMAX */
-    timer_control_signal.sigev_notify = SIGEV_THREAD;
-    timer_control_signal.sigev_notify_function = reinterpret_cast<void (*)(sigval_t)>(communicate_with_robot);
-    timer_control_signal.sigev_notify_attributes = &control_thread_attr;
-
-    int status; // status for timer create
-    /* Create timer */
-    if ((status = timer_create(CLOCK_REALTIME, &timer_control_signal, &timer_to_control))) {
-        fprintf(stderr, "Error creating timer : %d\n", status);
+    if ((thread_create_status = pthread_create( &control_thread, &control_thread_attr, communicate_with_robot, nullptr))) {
+        fprintf(stderr, "Cannot create thread.\n");
         return false;
     }
-
-    /* Set up timer structure with time parameters */
-    timer_control_spec.it_value.tv_sec = 0;
-    timer_control_spec.it_value.tv_nsec = 20000000;//20ms timer expiration
-    timer_control_spec.it_interval.tv_sec = 0;
-    timer_control_spec.it_interval.tv_nsec = 20000000;//20ms time to next interrupt
-
-    /* Change timer parameters and run */
-    timer_settime( timer_to_control, 0, &timer_control_spec, NULL);
 
 //    }
 //    if ((thread_create_status = pthread_create( &t, &supervisor_thread_attr, program_supervisor, nullptr))) {
@@ -155,27 +135,27 @@ bool launch_threads(){
 
 bool setup_all_mes_queues(){
     // Setup message queue from trajectory to console
-    mes_to_console_queue_attr.mq_maxmsg = MAX_MESSAGES_IN_QUEUE;    //Max 32 messages in queue
+    mes_to_console_queue_attr.mq_maxmsg = MAX_MESSAGES_IN_QUEUE;    //Max 10 messages in queue
     mes_to_console_queue_attr.mq_msgsize = sizeof(mq_consol_data_t);  //Char buffer for 32 characters
     // Create message queue
-    if ((mes_to_console_queue = mq_open("/mesQueCons2", O_CREAT | O_RDWR| O_NONBLOCK, 0644, &mes_to_console_queue_attr)) == -1) {
+    if ((mes_to_console_queue = mq_open(mes_que_name_1, O_CREAT | O_RDWR| O_NONBLOCK, 0644, &mes_to_console_queue_attr)) == -1) {
         fprintf(stderr, "Creation of the mes queues failed 1\n");
         return false;
     }
     // Setup message queue from console to logger
-    mes_to_logger_queue_attr.mq_maxmsg = MAX_MESSAGES_IN_QUEUE;    //Max 32 messages in queue
+    mes_to_logger_queue_attr.mq_maxmsg = MAX_MESSAGES_IN_QUEUE;    //Max 10 messages in queue
     mes_to_logger_queue_attr.mq_msgsize = sizeof(mq_log_data_t);  //Char buffer for 32 characters
 //    mes_to_logger_queue_attr.mq_flags = O_NONBLOCK;
     // Create message queue
-    if ((mes_to_logger_queue = mq_open("/meqQueLog2", O_CREAT | O_RDWR , 0644, &mes_to_logger_queue_attr)) == -1) {
+    if ((mes_to_logger_queue = mq_open(mes_que_name_2, O_CREAT | O_RDWR , 0644, &mes_to_logger_queue_attr)) == -1) {
         fprintf(stderr, "Creation of the mes queues failed 2\n");
         return false;
     }
     // Setup message queue from console to trajectory
-    mes_to_trajectory_queue_attr.mq_maxmsg = MAX_MESSAGES_IN_QUEUE;    //Max 32 messages in queue
+    mes_to_trajectory_queue_attr.mq_maxmsg = MAX_MESSAGES_IN_QUEUE;    //Max 10 messages in queue
     mes_to_trajectory_queue_attr.mq_msgsize = sizeof(mq_traj_manual_data_t);  //Char buffer for 32 characters
     // Create message queue
-    if ((mes_to_trajectory_queue = mq_open("/mes_que_traj2", O_CREAT | O_RDWR| O_NONBLOCK, 0644, &mes_to_trajectory_queue_attr)) == -1) {
+    if ((mes_to_trajectory_queue = mq_open(mes_que_name_3, O_CREAT | O_RDWR| O_NONBLOCK, 0644, &mes_to_trajectory_queue_attr)) == -1) {
         fprintf(stderr, "Creation of the mes queues failed 3\n");
         return false;
     }
@@ -190,4 +170,15 @@ void wait_to_join_threads(){
 //    pthread_join(trajectory_thread, nullptr);
     pthread_join(console_thread, nullptr);
     pthread_join(log_thread, nullptr);
+}
+
+void close_all_mes_queues(){
+    // close all message queues
+    mq_close(mes_to_logger_queue);
+    mq_close(mes_to_console_queue);
+    mq_close(mes_to_trajectory_queue);
+    // unlink all message queues
+    mq_unlink(mes_que_name_1);
+    mq_unlink(mes_que_name_2);
+    mq_unlink(mes_que_name_3);
 }
