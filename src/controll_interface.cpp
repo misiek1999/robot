@@ -83,6 +83,11 @@ void initialize_robot_communication(){
         std::cerr<<"Cannot bind socket"<<std::endl;
         throw std::runtime_error("cannot bind socket");
     }
+    // set 1sec timeout for receive
+    struct timeval timeout;
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+    setsockopt(control_socket_receive, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
     addr_length_receive = sizeof(server_addr);
 
 }
@@ -101,8 +106,7 @@ void receive_robot_position_packet(){
                              MSG_WAITALL,&server_addr, &addr_length_receive);
     // check is message is not received property
     if (status < 0){
-//        write_to_log("Cannot received packet");
-        std::cerr<<"cannot receive packet udp"<<std::endl;
+//        std::cerr<<"cannot receive packet udp: "<< strerror(errno) << std::endl;
     }else{  //if received packet is correct
         // create variable for current position and digital input
         robot_digital_data_type digit_in;
@@ -133,8 +137,8 @@ void send_robot_position_packet(){
                             (const struct sockaddr *) &socket_udp_control_send_addr, sizeof(socket_udp_control_send_addr));
     // check is message is not sent property
     if (status < 0){
-//        write_to_log("Cannot send packet");
-        std::cerr << "cannot save to log"<<std::endl;
+        write_to_log("Cannot send packet");
+        std::cerr << "cannot save to log: "<< strerror(errno) << std::endl;
     }
 }
 

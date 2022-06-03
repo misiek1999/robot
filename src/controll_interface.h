@@ -26,6 +26,7 @@
 #include "arpa/inet.h"
 #include "logger.h"
 #include "console_interface.h"
+#include "signal.h"
 /*
  * Global variable to check is manipulator reach setpoint position
  * False -when position is not rached, true - position reached
