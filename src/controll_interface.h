@@ -39,12 +39,12 @@ extern std::atomic<bool> is_manipulator_reach_setpoint_position;
 
 // Define global structure to communicate with robot
 // Data which is send to robot
-struct PacketToSend{
+struct __attribute__ ((packed)) PacketToSend{
     robot_joint_position_t setpoint_position;           // Current robot position in each joint
     robot_binary_interface_t send_digital_signals;      // Sended robot digital signals
 };
 // Data which is received from robot
-struct PacketToReceive{
+struct __attribute__ ((packed)) PacketToReceive{
     robot_joint_position_t received_position;           // Setpoint robot position in each joint
     robot_binary_interface_t received_digital_signals;  // Received robot digital signals
 };

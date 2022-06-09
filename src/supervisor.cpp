@@ -11,8 +11,8 @@ std::atomic <ProgramState> program_state;
 static void exit_handler(int){
     set_program_state(ProgramState::CLOSE_PROGRAM); // set close state in program
     // Send message to log and console
-    write_to_console("CRTL+C detected, stop program!");
-    write_to_log("CRTL+C detected, stop program!");
+    write_to_console("Stop signal handle!");
+    write_to_log("Stop signal handle!");
 }
 // Get program state
 const ProgramState get_program_state(){
