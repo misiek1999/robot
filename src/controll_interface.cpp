@@ -34,6 +34,7 @@ robot_joint_position_t current_robot_position;
 // Binary robot output and input global atomic variable
 robot_binary_interface_t robot_output_binary;
 robot_binary_interface_t robot_input_binary;
+//TODO: rebuild this mechanism
 /*
  * Global variable to check is manipulator reach setpoint position
  * False -when position is not rached, true - position reached
@@ -189,6 +190,8 @@ void* communicate_with_robot(void* _arg_input) {
     while(get_program_state() != ProgramState::CLOSE_PROGRAM){  //stop if program is shutdown
         receive_robot_position_packet();    // Try to receive udp packet with 10ms timeout
         //TODO: implement rest of this loop
+
+
     }
     //stop timer
     timer_control_spec.it_value.tv_nsec = 0;//set timer value to 0 to stop timer

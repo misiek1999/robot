@@ -21,6 +21,8 @@
 #include "string.h"
 #include "controll_interface.h"
 
+// Interprocess trajectory position reach signal
+#define POSITION_REACH_SIGNAL SIGUSR2
 
 /*
  * Enum include two state of robot trajectory generator
