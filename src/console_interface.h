@@ -37,5 +37,10 @@ typedef char mq_consol_data_t[32];
 // Run this task on low priority thread
 void * console_interface(void *pVoid);
 
+/*
+ * Interface with console
+ * Send cstring to message queue, which is later displayed in console
+*/
+void write_to_console(const  char* str_to_console);
 
 #endif //ROBOT_CONSOLE_INTERFACE_H

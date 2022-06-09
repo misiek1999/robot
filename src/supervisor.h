@@ -8,6 +8,8 @@
 #include "thread"
 #include "atomic"
 #include "iostream"
+#include "logger.h"
+#include "console_interface.h"
 /*
  * Define global enum of controller state
  * We define 4 state:
@@ -28,7 +30,12 @@ const ProgramState get_program_state();
 // Set program state
 void set_program_state(const ProgramState _state_to_set);
 
-//Supervisor thread function
+/*
+ * Supervisor thread function
+ * Run this function in separately thread with the highest priority
+ * Function catch signals with other process
+*/
+
 void * program_supervisor(void *pVoid);
 
 #endif //ROBOT_SUPERVISOR_H

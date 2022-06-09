@@ -12,7 +12,7 @@
  */
 mqd_t	mes_to_console_queue;
 struct	mq_attr mes_to_console_queue_attr;
-
+mq_consol_data_t  mq_console_read_data;
 
 /*
  * Function to select trajectory generator mode
@@ -55,18 +55,29 @@ void select_trajectory_mode(){
     }
 }
 
+/*
+ * Send csting to console from other threads
+ */
+void write_to_console(const  char* str_to_console){
+    int status = mq_send(mes_to_console_queue, (const char *)&str_to_console[0], sizeof(mq_consol_data_t), 0);
+    // Catch error code
+    if (status < 0 )
+        std::cerr<<"MQ CONSOLE SEND ERROR: "<<status<<" -> "<< strerror(errno) <<std::endl;
+}
 
 /*
  * Function read data from queue and display it on console
  * Inline function to reduce unnecessary calls
  */
 inline void display_queue_messages(){
-//    // Create buffer for received message
-//    mq_consol_data_t buffer;
-//    // Receive message from queue
-//    mq_receive(mes_to_console_queue, (char *)&buffer, sizeof(mq_consol_data_t), nullptr);
-//    // Display message in console
-//    printf("%s", buffer);
+    // Timeout for receive data 25ms
+    struct timespec rec_timeout = {0, 25000000};
+    // read data from queue
+    int status = mq_timedreceive(mes_to_console_queue, (char *)&mq_console_read_data[0], sizeof(mq_consol_data_t), NULL, &rec_timeout);
+    if (status >= 0 ) { // If message is receive successful then save it to file
+        // Print read data in console
+        std::cout<< mq_console_read_data << std::endl;
+    }
 }
 
 /*
