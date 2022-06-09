@@ -23,6 +23,8 @@
 
 // Interprocess trajectory position reach signal
 #define POSITION_REACH_SIGNAL SIGUSR2
+// Tolerance of robot joint position [deg]
+#define ROBOT_POSITION_TOLERANCE 1.0f
 
 /*
  * Enum include two state of robot trajectory generator

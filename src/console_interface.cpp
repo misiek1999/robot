@@ -113,7 +113,8 @@ void display_manual_instruction(){
 void read_control_from_console(){
     // Create temp variable for income char
     char read_char;
-    //TODO: fix this to get char without pressing enter
+    // Set the terminal to raw mode, works only on linux
+    system("stty raw");
     read_char = getchar();    // Read char from console
     // Select right option
     switch (read_char) {
