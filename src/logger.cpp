@@ -19,7 +19,7 @@ std::string get_time_in_string(){
     time(&curr_time);
     curr_tm = localtime(&curr_time);    //dont use locatime in other threads
     char time_str[32];
-    strftime(time_str, 32, "%H:%M:%S -%d.%m.%Y", curr_tm);
+    strftime(time_str, 32, "%H:%M:%S - %d.%m.%Y", curr_tm);
     return std::string(time_str);
 };
 
@@ -70,6 +70,11 @@ void * log_data_to_file(void *pVoid){
     pthread_getschedparam( pthread_self(), &policy, &param);
     param.sched_priority = sched_get_priority_min(policy);  // Read minimum value for thread priority
     pthread_setschedparam( pthread_self(), policy, &param);   //set minimum thread priority for this thread
+
+    // block signals
+    sigset_t sig_mask;
+    sigfillset(&sig_mask);
+    pthread_sigmask(SIG_SETMASK, &sig_mask, NULL);
 
     // Initialization of logging
     log_init();

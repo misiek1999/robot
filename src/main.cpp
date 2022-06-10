@@ -68,14 +68,19 @@ int main() {
     if (!launch_threads())// If initialization failed then stop application
         exit(EXIT_FAILURE);
 
-
-    write_to_log("Witam");
+//    // block all signals in main thread
+//    sigset_t mask;
+//    sigfillset(&mask);
+//    pthread_sigmask(SIG_SETMASK, &mask, NULL);
+//    write_to_log("Witam");
 
 
     while (get_program_state() != ProgramState::CLOSE_PROGRAM){
         sleep(1);
     }
 
+    // TODO: change this
+    pthread_cancel(supervisor_thread);
     // Wait to join all threads
     wait_to_join_threads();
 

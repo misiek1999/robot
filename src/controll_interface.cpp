@@ -155,6 +155,11 @@ void* communicate_with_robot(void* _arg_input) {
     param.sched_priority = sched_get_priority_max(policy);  // Read minimum value for thread priority
     pthread_setschedparam( pthread_self(), policy+2, &param);   //set max+1 thread priority for this thread
 
+    // block signals
+    sigset_t sig_mask;
+    sigfillset(&sig_mask);
+    pthread_sigmask(SIG_SETMASK, &sig_mask, NULL);
+
     // Initialize communication with robot
     initialize_robot_communication();
 

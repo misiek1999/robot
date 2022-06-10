@@ -11,7 +11,8 @@
 #include "iostream"
 #include "logger.h"
 #include "console_interface.h"
-
+// External close signal
+#define EXTERNAL_CLOSE_PROGRAM SIGINT
 // Interprocess close signal
 #define CLOSE_PROGRAM_SIGNAL SIGUSR1
 //Interprocess emergency stop signal
