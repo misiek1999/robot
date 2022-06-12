@@ -75,12 +75,12 @@ int main() {
 //    write_to_log("Witam");
 
 
-    while (get_program_state() != ProgramState::CLOSE_PROGRAM){
-        sleep(1);
-    }
-
-    // TODO: change this
-    pthread_cancel(supervisor_thread);
+//    while (get_program_state() != ProgramState::CLOSE_PROGRAM){
+//        sleep(1);
+//    }
+    program_supervisor(NULL);
+//    // TODO: change this
+//    pthread_cancel(supervisor_thread);
     // Wait to join all threads
     wait_to_join_threads();
 
@@ -111,10 +111,10 @@ bool launch_threads(){
     int thread_create_status;// Status of creating threads
     // Create threads
     // If creating fail, then return false
-    if ((thread_create_status = pthread_create( &supervisor_thread, &supervisor_thread_attr, program_supervisor, nullptr))) {
-        fprintf(stderr, "Cannot create thread.\n");
-        return false;
-    }
+//    if ((thread_create_status = pthread_create( &supervisor_thread, &supervisor_thread_attr, program_supervisor, nullptr))) {
+//        fprintf(stderr, "Cannot create thread.\n");
+//        return false;
+//    }
     if ((thread_create_status = pthread_create( &control_thread, &control_thread_attr, communicate_with_robot, nullptr))) {
         fprintf(stderr, "Cannot create thread.\n");
         return false;
@@ -170,7 +170,7 @@ bool setup_all_mes_queues(){
 
 // Wait to joint other threads
 void wait_to_join_threads(){
-    pthread_join(supervisor_thread, nullptr);
+//    pthread_join(supervisor_thread, nullptr);
     pthread_join(control_thread, nullptr);
 //    pthread_join(trajectory_thread, nullptr);
     pthread_join(console_thread, nullptr);

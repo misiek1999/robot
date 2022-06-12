@@ -61,7 +61,7 @@ void * program_supervisor(void *pVoid){
     sigprocmask(0, NULL, &supervisor_mask);
 
     // Add signals to supervisor_mask
-    sigaddset(&supervisor_mask, EXTERNAL_CLOSE_PROGRAM);   // Signal SIGINT from other process to stop program
+//    sigaddset(&supervisor_mask, EXTERNAL_CLOSE_PROGRAM);   // Signal SIGINT from other process to stop program
     sigaddset(&supervisor_mask, CLOSE_PROGRAM_SIGNAL);     // Signal used to close program
     sigaddset(&supervisor_mask, EMERGENCY_STOP_SIGNAL);    // Signal used to emergency stop program
     sigprocmask(SIG_SETMASK, &supervisor_mask, NULL);
@@ -96,12 +96,10 @@ void * program_supervisor(void *pVoid){
         fprintf(stderr, "Cannot register SIGINT handler.\n");
         return 0;
     }
-//    sigfillset(&supervisor_mask);
-//    sigprocmask (SIG_UNBLOCK, &supervisor_mask, NULL);
+
     // Enter to loop and wake up only receive any signal
     while(get_program_state() != ProgramState::CLOSE_PROGRAM){
-//        sigsuspend(&supervisor_mask);
-        sleep(100000);
+        sigsuspend(&supervisor_mask);
     }
     // Stop this thread
     return 0;
