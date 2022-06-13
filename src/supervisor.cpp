@@ -19,8 +19,7 @@ static void exit_handler(int input_signal){
 
 // Function to close program when interprocess signal was detected
 static void interprocess_exit_handler(int input_signal){
-    // stop supervisor thread
-//    pthread_cancel(pthread_self());
+    // Function to stop sigsuspend loop in supervisor thread
 }
 
 // Function for signal handler
@@ -38,7 +37,7 @@ void set_program_state(const ProgramState _state_to_set){
     program_state = _state_to_set;
     // Check if selected state is CLOSE_PROGRAM
     if (program_state == ProgramState::CLOSE_PROGRAM)
-            raise(CLOSE_PROGRAM_SIGNAL);    // raise close program signal to supervisor thread
+        kill(getpid(), CLOSE_PROGRAM_SIGNAL);    // send interprocess signal to stop supervisor thread
 }
 
 // Supervisor thread function
