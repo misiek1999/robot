@@ -38,7 +38,6 @@ void set_program_state(const ProgramState _state_to_set){
     program_state = _state_to_set;
     // Check if selected state is CLOSE_PROGRAM
     if (program_state == ProgramState::CLOSE_PROGRAM)
-//        kill(getpid(), CLOSE_PROGRAM_SIGNAL);   // raise close program signal to supervisor thread
             raise(CLOSE_PROGRAM_SIGNAL);    // raise close program signal to supervisor thread
 }
 
@@ -58,13 +57,7 @@ void * program_supervisor(void *pVoid){
     // Accept all signals in this thread
     sigset_t supervisor_mask;
     sigemptyset(&supervisor_mask);
-    sigprocmask(0, NULL, &supervisor_mask);
-
-    // Add signals to supervisor_mask
-    sigaddset(&supervisor_mask, EXTERNAL_CLOSE_PROGRAM);   // Signal SIGINT from other process to stop program
-    sigaddset(&supervisor_mask, CLOSE_PROGRAM_SIGNAL);     // Signal used to close program
-    sigaddset(&supervisor_mask, EMERGENCY_STOP_SIGNAL);    // Signal used to emergency stop program
-    pthread_sigmask(SIG_SETMASK, &supervisor_mask, NULL);
+    pthread_sigmask(SIG_SETMASK, &supervisor_mask, NULL); // Add signals to supervisor_mask
 
     // Prepare signal action struct for function handler
     struct sigaction emergency_stop_action;
@@ -102,8 +95,6 @@ void * program_supervisor(void *pVoid){
         sigsuspend(&supervisor_mask);
     }
 
-    // TODO: delete this, test print to console
-    std::cout<<"stop supervisor thread"<<std::endl;
     // Stop this thread
     return 0;
 }
