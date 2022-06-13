@@ -58,36 +58,41 @@ int main() {
     // Clear console buffer
     std::cin.clear();
     fflush(stdin);
+
     // Display welcome message
    std::cout << "Initialization bitcoin miner..." << std::endl;
+
     // Initialize all message queue in main thread before launching other thread to avoid access error
     if (!setup_all_mes_queues())// If initialization failed then stop application
         exit(EXIT_FAILURE);
+
+    // Block all signals in main thread and child threads
+    sigset_t sig_mask;
+    sigfillset(&sig_mask);
+    pthread_sigmask(SIG_SETMASK, &sig_mask, NULL);
 
     // Init and launch threads
     if (!launch_threads())// If initialization failed then stop application
         exit(EXIT_FAILURE);
 
-//    // block all signals in main thread
-//    sigset_t mask;
-//    sigfillset(&mask);
-//    pthread_sigmask(SIG_SETMASK, &mask, NULL);
-//    write_to_log("Witam");
+    // Enter to infinite loop until program enter to close mode
+    while (get_program_state() != ProgramState::CLOSE_PROGRAM){
+        sleep(1);
+    }
 
 
-//    while (get_program_state() != ProgramState::CLOSE_PROGRAM){
-//        sleep(1);
-//    }
-    program_supervisor(NULL);
-//    // TODO: change this
-//    pthread_cancel(supervisor_thread);
+    // If selected compiler is Cygwin on Windows then force close supervisor thread
+    #ifdef __CYGWIN__
+        pthread_cancel(supervisor_thread);
+    #endif
+
     // Wait to join all threads
     wait_to_join_threads();
 
     // Close all message queue's
     void close_all_mes_queues();
 
-    std::cout<<"end."<<std::endl;
+    std::cout<<"Main end."<<std::endl;
     return 0;
 }
 
@@ -102,6 +107,7 @@ bool launch_threads(){
     pthread_attr_init(&trajectory_thread_attr);
     pthread_attr_init(&console_thread_attr);
     pthread_attr_init(&log_thread_attr);
+    // Set pthread sched policy to FIFO
     pthread_attr_setschedpolicy(&supervisor_thread_attr, SCHED_FIFO);
     pthread_attr_setschedpolicy(&control_thread_attr, SCHED_FIFO);
     pthread_attr_setschedpolicy(&trajectory_thread_attr, SCHED_FIFO);
@@ -111,10 +117,10 @@ bool launch_threads(){
     int thread_create_status;// Status of creating threads
     // Create threads
     // If creating fail, then return false
-//    if ((thread_create_status = pthread_create( &supervisor_thread, &supervisor_thread_attr, program_supervisor, nullptr))) {
-//        fprintf(stderr, "Cannot create thread.\n");
-//        return false;
-//    }
+    if ((thread_create_status = pthread_create( &supervisor_thread, &supervisor_thread_attr, program_supervisor, nullptr))) {
+        fprintf(stderr, "Cannot create thread.\n");
+        return false;
+    }
     if ((thread_create_status = pthread_create( &control_thread, &control_thread_attr, communicate_with_robot, nullptr))) {
         fprintf(stderr, "Cannot create thread.\n");
         return false;
@@ -170,7 +176,7 @@ bool setup_all_mes_queues(){
 
 // Wait to joint other threads
 void wait_to_join_threads(){
-//    pthread_join(supervisor_thread, nullptr);
+    pthread_join(supervisor_thread, nullptr);
     pthread_join(control_thread, nullptr);
 //    pthread_join(trajectory_thread, nullptr);
     pthread_join(console_thread, nullptr);

@@ -275,11 +275,6 @@ void * console_interface(void *pVoid){
     param.sched_priority = sched_get_priority_min(policy);  // Read minimum value for thread priority
     pthread_setschedparam( pthread_self(), policy-1, &param);   //set almost minimum thread priority for this thread
 
-    // block signals
-    sigset_t sig_mask;
-    sigfillset(&sig_mask);
-    pthread_sigmask(SIG_SETMASK, &sig_mask, NULL);
-
     //Initialize console
     console_communication_initialization();
     if (get_program_state() != ProgramState::CLOSE_PROGRAM)
