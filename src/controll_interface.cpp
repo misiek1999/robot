@@ -193,9 +193,14 @@ void* communicate_with_robot(void* _arg_input) {
 }
 
 // Function to write digital output in robot
-void write_digital_output(const robot_digital_data_type _input){
+void set_digital_output(const robot_digital_data_type _input){
     // Change digital output with xor current robot digital output with input
     robot_input_binary = (_input ^ robot_input_binary);
+}
+
+// get digital output
+robot_digital_data_type get_digital_output(){
+    return robot_output_binary;
 }
 
 // read robot current joint position

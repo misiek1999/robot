@@ -7,6 +7,15 @@
 // Program state variable
 std::atomic <ProgramState> program_state;
 
+// change setpoint position to current position to stop robot movement
+void stop_robot_movement(){
+    // read current robot position
+    robot_joint_position_t curr_pos;
+    get_current_robot_position(curr_pos);
+    // lock robot at current position
+    write_setpoint_robot_position(curr_pos);
+}
+
 // Function to close program when closing signal was detected
 static void exit_handler(int input_signal){
     // Send message to log and console
@@ -23,6 +32,8 @@ static void interprocess_exit_handler(int input_signal){
 
 // Function for signal handler
 static void emergency_stop_handler(int input_signal){
+    // stop robot movement
+    stop_robot_movement();
     set_program_state(ProgramState::EMERGENCY_STOP);
     // Send message to log and console
     write_to_console("Emergency stop detected!");

@@ -33,6 +33,8 @@ enum class ProgramState{
     CLOSE_PROGRAM = 3
 };
 
+// lock robot movement
+void stop_robot_movement();
 
 // Get program state
 const ProgramState get_program_state();

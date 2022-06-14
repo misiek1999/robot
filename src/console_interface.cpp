@@ -142,7 +142,7 @@ void read_control_from_console(){
         // If input is number from 1 to 8 then change robot digital output
         case 49 ... 56:
             // change number from 1 ... 8 to powers of 2
-            write_digital_output((uint8_t) pow(read_char - 48,2));
+            set_digital_output((uint8_t) pow(read_char - 48, 2));
             break;
         default:
             break;  // Do nothing after selecting undefined key;

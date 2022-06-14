@@ -18,6 +18,8 @@ void position_unreachable_alarm(){
     char buff[40];
     sprintf(buff, "Position unreachable error at: %d !", (int)instruction_number_iterator);
     write_to_log(buff);
+    // Lock robot movement
+    stop_robot_movement();
     // change program state to emergency stop
     set_program_state(ProgramState::EMERGENCY_STOP);
 }
@@ -74,7 +76,7 @@ void write_digital_instruction(InstructionData _data){
     // get digital out from data
     digital_out = _data.digital_data;
     // write digital output
-    write_digital_output(digital_out);
+    set_digital_output(digital_out);
 }
 
 void if_instruction(InstructionData _data, InstructionIteratorType &instr_numb, bool &jump_flag){
@@ -104,7 +106,9 @@ void wait_instruction(InstructionData _data){
 }
 
 void stop_instruction(){
-    // Change program state to resume
+    // Lock robot movement
+    stop_robot_movement();
+    // Change program state to stop
     set_program_state(ProgramState::STOP);
 }
 
@@ -114,7 +118,9 @@ void resume_instruction(){
 }
 
 void exit_instruction(){
-    // Change program state to resume
+    // Lock robot movement
+    stop_robot_movement();
+    // Change program state to close program
     set_program_state(ProgramState::CLOSE_PROGRAM);
 }
 
@@ -126,37 +132,44 @@ void execute_instructions(){
     // Check the status of the program, in case of a shutdown or an emergency stop, skip the execution of the instructions
     ProgramState current_state = get_program_state();
     if (current_state == ProgramState::RUNNING || current_state == ProgramState::STOP) {
+        /* bool variable to detect jump */
+        bool stop_auto_instruction_iterator_increase = false;
+
+        // Read current instruction and data
+        trajectory_instruction_buffer_mutex.lock();
+        TrajectoryInstruction curr_instr_set = trajectory_instruction_buffer[instruction_number_iterator];
+        trajectory_instruction_buffer_mutex.unlock();
+        Trajectory_instruction_set instruction = curr_instr_set.instruction;
+        InstructionData data = curr_instr_set.data;
+
         // Continue only if setpoint position is reached
         if (is_position_reached()) {
-            /* bool variable to detect jump */
-            bool jump_instruction_detected = false;
-
-            // Read current instruction and data
-            trajectory_instruction_buffer_mutex.lock();
-            TrajectoryInstruction curr_instr_set = trajectory_instruction_buffer[instruction_number_iterator];
-            trajectory_instruction_buffer_mutex.unlock();
-            Trajectory_instruction_set instruction = curr_instr_set.instruction;
-            InstructionData data = curr_instr_set.data;
-
             // Select and execute instruction
             switch (instruction) {
                 case Trajectory_instruction_set::UNDEFINED:
                     undefined_instruction_stop();
                     break;
                 case Trajectory_instruction_set::GO_PTP:
-                    go_ptp_instruction(data);
+                    if (get_program_state() == ProgramState::RUNNING)// stop movement in different program state as RUNNING
+                        go_ptp_instruction(data);
+                    else
+                        stop_auto_instruction_iterator_increase = true;
                     break;
                 case Trajectory_instruction_set::FINE:
-                    fine_instruction(data);
+                    if (get_program_state() == ProgramState::RUNNING)// stop movement in different program state as RUNNING
+                        fine_instruction(data);
+                    else
+                        stop_auto_instruction_iterator_increase = true;
+                    break;
                     break;
                 case Trajectory_instruction_set::WRITE_DIGITAL:
                     write_digital_instruction(data);
                     break;
                 case Trajectory_instruction_set::IF:
-                    if_instruction(data, instruction_number_iterator, jump_instruction_detected);
+                    if_instruction(data, instruction_number_iterator, stop_auto_instruction_iterator_increase);
                     break;
                 case Trajectory_instruction_set::JUMP:
-                    jump_instruction(data, instruction_number_iterator, jump_instruction_detected);
+                    jump_instruction(data, instruction_number_iterator, stop_auto_instruction_iterator_increase);
                     break;
                 case Trajectory_instruction_set::WAIT:
                     wait_instruction(data);
@@ -176,8 +189,16 @@ void execute_instructions(){
             }
 
             // If jump instruction was not executed then increase instruction number by 1
-            if (!jump_instruction_detected)
+            if (!stop_auto_instruction_iterator_increase)
                 ++instruction_number_iterator;
+        }
+        // If position is not reached, but current instruction is fine movement
+        else{
+            if (instruction == Trajectory_instruction_set::FINE) {
+                if (get_program_state() == ProgramState::RUNNING)// stop movement in different program state as RUNNING
+                    fine_instruction(data);
+            }
+
         }
     }
 }

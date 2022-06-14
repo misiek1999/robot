@@ -56,7 +56,7 @@ struct __attribute__ ((packed)) PacketToReceive{
  */
 void* communicate_with_robot(void* _arg_input);
 // Write digital output to robot
-void write_digital_output(const robot_digital_data_type _input);
+void set_digital_output(const robot_digital_data_type _input);
 // get digital output
 robot_digital_data_type get_digital_output();
 // read robot current joint position
