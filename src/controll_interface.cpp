@@ -1,6 +1,7 @@
 //
 // Created by Ja on 16.05.2022.
 //
+
 // File include function to communicate with robot or simulator via Internet
 // UDP protocol is used in this implementation
 #include "controll_interface.h"
@@ -11,7 +12,6 @@
 // UDP socket send
 struct sockaddr_in socket_udp_control_send_addr; //udp communication params to send packet
 int control_socket_send; //socket for udp communication
-socklen_t addr_length_send;
 
 // UDP socket receive
 struct sockaddr_in socket_udp_control_receive_addr; //udp communication params to send packet
@@ -34,13 +34,6 @@ robot_joint_position_t current_robot_position;
 // Binary robot output and input global atomic variable
 robot_binary_interface_t robot_output_binary;
 robot_binary_interface_t robot_input_binary;
-//TODO: rebuild this mechanism
-/*
- * Global variable to check is manipulator reach setpoint position
- * False -when position is not rached, true - position reached
-*/
-//extern bool is_manipulator_reach_setpoint_position;
-
 // mutex's
 std::mutex setpoint_robot_position_mutex;
 std::mutex current_robot_position_mutex;
@@ -105,10 +98,8 @@ void receive_robot_position_packet(){
     // receive feedback message from robot
     ssize_t status= recvfrom(control_socket_receive, &received_packet, sizeof(PacketToReceive),
                              MSG_WAITALL,&server_addr, &addr_length_receive);
-    // check is message is not received property
-    if (status < 0){
-//        std::cerr<<"cannot receive packet udp: "<< strerror(errno) << std::endl;
-    }else{  //if received packet is correct
+    // check is message is received property
+    if (status >= 0){
         // create variable for current position and digital input
         robot_digital_data_type digit_in;
         digit_in = received_packet.received_digital_signals;
@@ -179,9 +170,9 @@ void* communicate_with_robot(void* _arg_input) {
 
     /* Set up timer structure with time parameters */
     timer_control_spec.it_value.tv_sec = 0;
-    timer_control_spec.it_value.tv_nsec = 20000000;//20ms timer expiration
+    timer_control_spec.it_value.tv_nsec = COMMUNICATION_TIME_PERIOD * 1000000;//20ms timer expiration
     timer_control_spec.it_interval.tv_sec = 0;
-    timer_control_spec.it_interval.tv_nsec = 20000000;//20ms time to next interrupt
+    timer_control_spec.it_interval.tv_nsec = COMMUNICATION_TIME_PERIOD * 1000000;//20ms time to next interrupt
 
     /* Change timer parameters and run */
     timer_settime( timer_to_control, 0, &timer_control_spec, NULL);
@@ -189,10 +180,8 @@ void* communicate_with_robot(void* _arg_input) {
     // Enter to infinite loop until close program to receive packet with timeout 10ms
     while(get_program_state() != ProgramState::CLOSE_PROGRAM){  //stop if program is shutdown
         receive_robot_position_packet();    // Try to receive udp packet with 10ms timeout
-        //TODO: implement rest of this loop
+      }
 
-
-    }
     //stop timer
     timer_control_spec.it_value.tv_nsec = 0;//set timer value to 0 to stop timer
     timer_control_spec.it_interval.tv_nsec = 0;
@@ -209,9 +198,8 @@ void write_digital_output(const robot_digital_data_type _input){
     robot_input_binary = (_input ^ robot_input_binary);
 }
 
-
 // read robot current joint position
-void read_current_robot_position(robot_joint_position_t _current_position){
+void get_current_robot_position(robot_joint_position_t _current_position){
     // lock robot current joint position mutex
     current_robot_position_mutex.lock();
     // read current robot position

@@ -194,6 +194,7 @@ void read_trajectory_from_file(std::string _path_to_file){
         }
         //Unlock the mutex when it has finished reading data from the file
         trajectory_instruction_buffer_mutex.unlock();
+        is_file_trajectory_load = true;
         // Display message after successful read data from file
         std::cout<< "File loaded successful! "<<std::endl;
         char str[32];
@@ -291,7 +292,7 @@ void * console_interface(void *pVoid){
                 std::cout<<"Undefined mode! Stop application."<<std::endl; // Display error message
                 throw std::runtime_error("error"); //Stop program
         }
-    // Display exit message
+    // Display exit message in console
     std::cout<<"Exit program. Thank you for your root access!"<<std::endl;
     return 0;
 }

@@ -27,15 +27,14 @@
 #include "logger.h"
 #include "console_interface.h"
 #include "signal.h"
+
+// period of time between communication with the robot [ms]
+#define COMMUNICATION_TIME_PERIOD 20
+
 /*
  * Global variable to check is manipulator reach setpoint position
  * False -when position is not rached, true - position reached
 */
-// TODO: Zmienić ten mechanizm na ten z zajęć 8
-// Czyli najlepiej sygnały
-extern std::atomic<bool> is_manipulator_reach_setpoint_position;
-
-
 
 // Define global structure to communicate with robot
 // Data which is send to robot
@@ -61,7 +60,7 @@ void write_digital_output(const robot_digital_data_type _input);
 // get digital output
 robot_digital_data_type get_digital_output();
 // read robot current joint position
-void read_current_robot_position(robot_joint_position_t _current_position);
+void get_current_robot_position(robot_joint_position_t _current_position);
 // write robot setpoint joint position
 void write_setpoint_robot_position(const robot_joint_position_t _setpoint_position);
 // get robot setpoint position

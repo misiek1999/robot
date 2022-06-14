@@ -20,11 +20,13 @@
 #include "errno.h"
 #include "string.h"
 #include "controll_interface.h"
+#include "instruction_processor.h"
 
-// Interprocess trajectory position reach signal
+// Internal signal indicating that the set position has been reached
 #define POSITION_REACH_SIGNAL SIGUSR2
-// Tolerance of robot joint position [deg]
-#define ROBOT_POSITION_TOLERANCE 1.0f
+
+// global state of loading trajectory from file
+extern std::atomic<bool> is_file_trajectory_load;
 
 /*
  * Enum include two state of robot trajectory generator
@@ -40,61 +42,6 @@ enum class Trajectory_control_type{ // enum class to avoid name conflict with ot
 
 // global trajectory control type variable
 extern std::atomic<Trajectory_control_type> robot_trajectory_mode;
-
-/*
- * enum containing the instructions set of the trajectory generator
- * contains the following instructions:
- *  UNDEFINED,// non specified instruction, means data error
- *  GO_PTP  // moves the robot arm in joint coordinates [Joint1, Joint2, Joint3] [rad]
- *  FINE,   // moves the robot arm in Cartesian coordinates at a given speed    [X, Y, Z, SPEED][cm, cm, cm, cm/s]
- *  WRITE_DIGITAL,// Write digital pin to robot [digital_output]
- *  IF,     // compare the digital outputs with the given condition, in case of true jump to the given address [digital_read_value, condition, instruction]
- *  JUMP,   //Jump to the given instruction [instruction_number]
- *  WAIT,   //Program will wait certain time in [ms]
- *  STOP,   //stop program
- *  EXIT    //exit program
- */
-
-enum class Trajectory_instruction_set{
-    UNDEFINED = 0,  // Undefined instruction
-    GO_PTP, // moves the robot arm in joint coordinates
-    FINE,   // moves the robot arm in Cartesian coordinates at a given speed
-    WRITE_DIGITAL,// Write digital pin to robot
-    IF,     // compare the digital outputs with the given condition, in case of true jump to the given address
-    JUMP,   //Jump to the given instruction
-    WAIT,   //Program will wait certain time in ms
-    STOP,   //stop program
-    EXIT    //exit program
-};
-/*
- * Instruction data for each instruction
- */
-union InstructionData{
-    float fine_data[4];     //Data for FINE instruction: X, Y, Z in cardesian pos and required speed
-    float go_ptp_data[3];   //Data used for ptp move, include joint position
-    uint8_t digital_data;   // Digital output
-    unsigned int if_data[2];// Data for if statement
-    unsigned int jump_data; // Address in jump instruction
-    unsigned int wait_data; // Time to wait in ms
-    uint8_t bytes[16];      // bytes of this union
-};
-
-/*
- * Instruction structure
- * Include single instruction and data for each instruction
- */
-struct TrajectoryInstruction
-{
-    Trajectory_instruction_set instruction; // Predefined instruction
-    InstructionData data;// Data for each instruction
-};
-
-//Limit for instructions in buffer
-#define MAX_INSTRUCTION_PER_TRAJECTORY 128
-// Global instruction buffer
-extern TrajectoryInstruction trajectory_instruction_buffer[MAX_INSTRUCTION_PER_TRAJECTORY];
-// mutex for trajectory instruction buffer
-extern std::mutex trajectory_instruction_buffer_mutex;
 
 // enum for instruction from console in manual mode
 enum ManualModeControlInstruction{
@@ -112,5 +59,21 @@ typedef ManualModeControlInstruction mq_traj_manual_data_t;
 
 // Function to send message with instruction to trajectory generator in manual mode
 void send_manual_control(ManualModeControlInstruction _instruction);
+
+// Function to run trajectory generator in new thread
+void* generate_trajectory(void *pVoid);
+
+/*
+ * Check is position reached
+ * Compare global setpoint and current robot joint position, if difference is smaller than tolerance then function
+ * return true else function return false.
+*/
+bool is_position_reached();
+
+/*
+ * Function to check joint limits
+ * Return true if position is reachable
+ */
+bool check_joint_limit(const robot_joint_position_t _position);
 
 #endif //ROBOT_TRAJECTORY_GENERATOR_H

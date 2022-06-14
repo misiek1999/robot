@@ -3,6 +3,7 @@
 //
 
 #include "calculate_robot_position.h"
+
 /*
  * Function to calculate inverse robot kinematics
  * Input two arguments:

@@ -6,7 +6,6 @@
 
 // Program state variable
 std::atomic <ProgramState> program_state;
-pthread_t supervisor_thread_id;
 
 // Function to close program when closing signal was detected
 static void exit_handler(int input_signal){
@@ -25,6 +24,9 @@ static void interprocess_exit_handler(int input_signal){
 // Function for signal handler
 static void emergency_stop_handler(int input_signal){
     set_program_state(ProgramState::EMERGENCY_STOP);
+    // Send message to log and console
+    write_to_console("Emergency stop detected!");
+    write_to_log("Emergency stop detected!");
 }
 
 // Get program state
@@ -42,8 +44,6 @@ void set_program_state(const ProgramState _state_to_set){
 
 // Supervisor thread function
 void * program_supervisor(void *pVoid){
-    // read this thread id
-    supervisor_thread_id = pthread_self();
     // Init thread priority
     int policy;     //Scheduling policy: FIFO or RR
     struct sched_param param;   //Structure of other thread parameters
@@ -56,6 +56,7 @@ void * program_supervisor(void *pVoid){
     // Accept all signals in this thread
     sigset_t supervisor_mask;
     sigemptyset(&supervisor_mask);
+    sigaddset(&supervisor_mask, POSITION_REACH_SIGNAL); // Block signal with reached position
     pthread_sigmask(SIG_SETMASK, &supervisor_mask, NULL); // Add signals to supervisor_mask
 
     // Prepare signal action struct for function handler

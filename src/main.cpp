@@ -1,13 +1,14 @@
 /*
  * This is the main function of robot trajectory generator
- * Include all necesery liblaries, variables and function
+ * Include all necessary libraries, variables and function
  * Launch the following threads:
  * 1 - Supervisor
  * 2 - Robot internet interface
- * 3 - Trajecotry generator
+ * 3 - Trajectory generator
  * 4 - Console interface
  * 5 - File log 
  */
+
 // Include libraries
 #include <iostream>
 #include <semaphore.h>
@@ -53,14 +54,12 @@ pthread_attr_t log_thread_attr;
 char mes_que_name_1[20] = "/mesQueCons2";
 char mes_que_name_2[20] = "/meqQueLog2";
 char mes_que_name_3[20] = "/mes_que_traj2";
+
 // Main function
 int main() {
     // Clear console buffer
     std::cin.clear();
     fflush(stdin);
-
-    // Display welcome message
-   std::cout << "Initialization bitcoin miner..." << std::endl;
 
     // Initialize all message queue in main thread before launching other thread to avoid access error
     if (!setup_all_mes_queues())// If initialization failed then stop application
@@ -77,14 +76,8 @@ int main() {
 
     // Enter to infinite loop until program enter to close mode
     while (get_program_state() != ProgramState::CLOSE_PROGRAM){
-        sleep(1);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
-
-
-    // If selected compiler is Cygwin on Windows then force close supervisor thread
-    #ifdef __CYGWIN__
-        pthread_cancel(supervisor_thread);
-    #endif
 
     // Wait to join all threads
     wait_to_join_threads();
@@ -114,8 +107,8 @@ bool launch_threads(){
     pthread_attr_setschedpolicy(&console_thread_attr, SCHED_FIFO);
     pthread_attr_setschedpolicy(&log_thread_attr, SCHED_FIFO);
 
-    int thread_create_status;// Status of creating threads
-    // Create threads
+    // Start new threads
+    int thread_create_status;   // Status of creating threads
     // If creating fail, then return false
     if ((thread_create_status = pthread_create( &supervisor_thread, &supervisor_thread_attr, program_supervisor, nullptr))) {
         fprintf(stderr, "Cannot create thread.\n");
@@ -125,12 +118,10 @@ bool launch_threads(){
         fprintf(stderr, "Cannot create thread.\n");
         return false;
     }
-
-//    }
-//    if ((thread_create_status = pthread_create( &t, &supervisor_thread_attr, program_supervisor, nullptr))) {
-//        fprintf(stderr, "Cannot create thread.\n");
-//        return false;
-//    }
+    if ((thread_create_status = pthread_create( &trajectory_thread, &trajectory_thread_attr, generate_trajectory, nullptr))) {
+        fprintf(stderr, "Cannot create thread.\n");
+        return false;
+    }
     if ((thread_create_status = pthread_create( &console_thread, &console_thread_attr, console_interface, nullptr))) {
         fprintf(stderr, "Cannot create thread.\n");
         return false;
@@ -139,8 +130,6 @@ bool launch_threads(){
         fprintf(stderr, "Cannot create thread.\n");
         return false;
     }
-
-
     return true;
 }
 
@@ -178,7 +167,8 @@ bool setup_all_mes_queues(){
 void wait_to_join_threads(){
     pthread_join(supervisor_thread, nullptr);
     pthread_join(control_thread, nullptr);
-//    pthread_join(trajectory_thread, nullptr);
+    pthread_join(trajectory_thread, nullptr);
+    //TODO: timeout for console join on linux
     pthread_join(console_thread, nullptr);
     pthread_join(log_thread, nullptr);
 }

@@ -5,13 +5,14 @@
 #include "trajectory_generator.h"
 // Manual mode position change value
 #define MANUAL_MODE_CONTROL_CHANGE_VALUE 1.0f;
+// Tolerance of robot joint position [deg]
+#define ROBOT_POSITION_TOLERANCE 1.0f
 
+// global state of loading trajectory from file
+std::atomic<bool> is_file_trajectory_load;
+
+// global atomic enum with trajectory generator mode
 std::atomic<Trajectory_control_type>  robot_trajectory_mode;
-
-// Global instruction buffer
-TrajectoryInstruction trajectory_instruction_buffer[MAX_INSTRUCTION_PER_TRAJECTORY];
-// mutex for trajectory instruction buffer
-std::mutex trajectory_instruction_buffer_mutex;
 
 // Message queue for data from console to trajectory generator
 mqd_t	mes_to_trajectory_queue;
@@ -42,17 +43,17 @@ void send_manual_control(ManualModeControlInstruction _instruction){
 }
 
 // Read message from message queue every 10ms
-void raed_manual_control(){
+void manual_control(){
     ManualModeControlInstruction instruction;
     // Timeout for receive data
     struct timespec rec_timeout = {0, 10000000}; //10ms
     // read data from queue
     int status = mq_timedreceive(mes_to_trajectory_queue, (char *)&instruction, sizeof(mq_traj_manual_data_t), NULL, &rec_timeout);
-    if (status>=0){ // if received message is correct and not timeouted
+    if (status>=0){ // if received message is correct and not timeout
         // Create local variable for current robot position
         robot_joint_position_t curr_pos;
         // read current robot position
-        read_current_robot_position(curr_pos);
+        get_current_robot_position(curr_pos);
         // set new value for joint position
         switch (instruction) {
             case ManualModeControlInstruction::joint_1_left:
@@ -81,3 +82,64 @@ void raed_manual_control(){
         }
     }
 }
+
+//Automatic robot control
+void auto_control(){
+     // if file with trajectory instruction is loaded then continue
+     if (is_file_trajectory_load){
+       execute_instructions();// execute next instructions
+     }
+ }
+
+// Function to run trajectory generator in new thread
+void* generate_trajectory(void *pVoid){
+     // init variables
+    is_file_trajectory_load = false;    // set no selected trajectory bool
+
+    // Init thread priority
+    int policy;     //Scheduling policy: FIFO or RR
+    struct sched_param param;   //Structure of other thread parameters
+
+    /* Read modify and set new thread priority */
+    pthread_getschedparam( pthread_self(), &policy, &param);
+    param.sched_priority = sched_get_priority_max(policy);  // Read minimum value for thread priority
+    pthread_setschedparam( pthread_self(), policy+3, &param);   //set thread priority for this thread to max + 3
+
+    // Enter to loop until program close
+    while(get_program_state() != ProgramState::CLOSE_PROGRAM){
+        // select right option to right generation mode
+        switch (robot_trajectory_mode) {
+            case Trajectory_control_type::UNDEFINED:    // If mode is unspecified then wait 100ms
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                break;
+            case Trajectory_control_type::AUTO:         // Enter to auto mode control
+                auto_control();     // Read instruction and control robot
+                break;
+            case Trajectory_control_type::MANUAL:       // Enter to manual mode control
+                manual_control();  // read manual control from console
+                break;
+            default:
+                // When mode is not defined in enum then throw except
+                throw std::runtime_error("Undefined trajectory generator mode");
+        }
+    }
+    return nullptr;
+ }
+
+bool is_position_reached(){
+     // variable for position array
+    robot_joint_position_t setpoint_pos;
+    robot_joint_position_t current_pos;
+    // read current and setpoint position
+    get_current_robot_position(current_pos);
+    get_setpoint_robot_position(setpoint_pos);
+    // Check every joint in robot
+    for (size_t itr = 0; itr <  NUMBER_OF_ROBOT_JOINT; ++itr){
+        float diff = setpoint_pos[itr] - current_pos[itr];
+        // If one of joint is not correct then return false
+        if (abs(diff ) > ROBOT_JOINT_POSITION_TOLERANCE)
+            return false;
+    }
+    // if all joint positions are correct then return true
+     return true;
+ }
