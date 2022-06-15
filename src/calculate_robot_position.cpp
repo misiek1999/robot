@@ -7,17 +7,17 @@
 /*
  * Function to calculate inverse robot kinematics
  * Input two arguments:
- * setpoint_manipulator_position - requested position to reach
- * current_position - current position of manipulator
- * designated_control - setpoint to each joint
+ * cartesian_position - requested position to reach in cartesian position
+ * current_position - current position of manipulator in joint position
+ * calculated_joint_position - requested of manipulator position in joint position
  * Replace this function for the kinematics of your robot
  */
-void calculate_inverse_robot_kinematics(Manipulator_position setpoint_manipulator_position,
-                                        robot_joint_position_t designated_control){
+void calculate_inverse_robot_kinematics(Manipulator_position cartesian_position,
+                                        robot_joint_position_t calculated_joint_position){
     // extract the setpoint manipulator position in cartesian system
-    float setpoint_x =  setpoint_manipulator_position.x;
-    float setpoint_y =  setpoint_manipulator_position.y;
-    float setpoint_z =  setpoint_manipulator_position.z;
+    float setpoint_x =  cartesian_position.x;
+    float setpoint_y =  cartesian_position.y;
+    float setpoint_z =  cartesian_position.z;
 
     // Calculate position to first joint
     float angle_1 = atan2(setpoint_y, setpoint_x);
@@ -34,7 +34,30 @@ void calculate_inverse_robot_kinematics(Manipulator_position setpoint_manipulato
     float angle_2 = beta + theta;
 
     // save the calculated values to output array
-    designated_control[0] = angle_1;
-    designated_control[1] = angle_2;
-    designated_control[2] = angle_3;
+    calculated_joint_position[0] = angle_1;
+    calculated_joint_position[1] = angle_2;
+    calculated_joint_position[2] = angle_3;
+}
+
+/*
+ * Function to calculate simple robot kinematic of given robot
+ * Depending on the robot configuration used, change the function code
+ */
+void calculate_simple_robot_kinematics(Manipulator_position cartesian_position,
+                                       robot_joint_position_t joint_position){
+    // read robot joint position
+    float joint_1_angle = joint_position[0];
+    float joint_2_angle = joint_position[1];
+    float joint_3_angle = joint_position[2];
+
+    // find manipulator position
+    float dx; // joint 2 and 3 2D position x
+    float dy; // joint 2 and 3 2D position y
+    dx =  cos(joint_2_angle)* ARM_2_LENGTH + cos(joint_2_angle + joint_3_angle) * ARM_3_LENGTH;
+    dy =  sin(joint_2_angle)* ARM_2_LENGTH + sin(joint_2_angle + joint_3_angle) * ARM_3_LENGTH;
+
+    // write to cartesian position
+    cartesian_position.x = cos(joint_1_angle) * dx;
+    cartesian_position.y = sin(joint_1_angle) * dx;
+    cartesian_position.z = ARM_1_LENGTH + dy;
 }

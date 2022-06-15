@@ -56,19 +56,22 @@ void go_ptp_instruction(InstructionData _data){
 
 void fine_instruction(InstructionData _data) {
     robot_joint_position_t new_position;
-    //TODO: finish this function
+    robot_joint_position_t requied_position;
+    // set new setpoint value for each joint
+    for (size_t itr = 0; itr < NUMBER_OF_ROBOT_JOINT; ++itr){
+        requied_position[itr] = _data.fine_data[itr];
+    }
+    float arm_linear_speed = _data.fine_data[NUMBER_OF_ROBOT_JOINT];
+    // Find next point to reach in fine trajectory generator mode
+    generate_fine_trajectory(new_position, requied_position, arm_linear_speed);
 
-//    // set new setpoint value for each joint
-//    for (size_t itr = 0; itr < NUMBER_OF_ROBOT_JOINT; ++itr){
-//        new_position[itr] = _data.go_ptp_data[itr];
-//    }
-//    // check limits
-//    if (check_joint_limit(new_position)) {
-//        // Set new position to reach
-//        write_setpoint_robot_position(new_position);
-//    }else{
-//        position_unreachable_alarm();
-//    }
+    // check limits
+    if (check_joint_limit(new_position)) {
+        // Set new position to reach
+        write_setpoint_robot_position(new_position);
+    }else{
+        position_unreachable_alarm();
+    }
 }
 
 void write_digital_instruction(InstructionData _data){

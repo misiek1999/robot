@@ -29,7 +29,7 @@
 #include "signal.h"
 
 // period of time between communication with the robot [ms]
-#define COMMUNICATION_TIME_PERIOD 20
+#define CONTROL_TIME_PERIOD 20
 
 /*
  * Global variable to check is manipulator reach setpoint position

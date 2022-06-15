@@ -170,9 +170,9 @@ void* communicate_with_robot(void* _arg_input) {
 
     /* Set up timer structure with time parameters */
     timer_control_spec.it_value.tv_sec = 0;
-    timer_control_spec.it_value.tv_nsec = COMMUNICATION_TIME_PERIOD * 1000000;//20ms timer expiration
+    timer_control_spec.it_value.tv_nsec = CONTROL_TIME_PERIOD * 1000000;//20ms timer expiration
     timer_control_spec.it_interval.tv_sec = 0;
-    timer_control_spec.it_interval.tv_nsec = COMMUNICATION_TIME_PERIOD * 1000000;//20ms time to next interrupt
+    timer_control_spec.it_interval.tv_nsec = CONTROL_TIME_PERIOD * 1000000;//20ms time to next interrupt
 
     /* Change timer parameters and run */
     timer_settime( timer_to_control, 0, &timer_control_spec, NULL);

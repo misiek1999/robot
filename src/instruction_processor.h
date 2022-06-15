@@ -8,7 +8,7 @@
 #include "supervisor.h"
 #include "controll_interface.h"
 #include "supervisor.h"
-
+#include "fine_trajectory.h"
 // Instruction number iterator type
 typedef size_t InstructionIteratorType;
 

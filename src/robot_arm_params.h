@@ -7,7 +7,7 @@
  */
 #ifndef ROBOT_ROBOT_ARM_PARAMS_H
 #define ROBOT_ROBOT_ARM_PARAMS_H
-// Include liblaries
+// Include libraries
 #include "atomic"
 
 // Manipulator position in cartesian system
@@ -27,14 +27,14 @@ typedef std::uint8_t robot_digital_data_type;                    // Robot univer
 typedef std::atomic <robot_digital_data_type> robot_binary_interface_t; // Atomic robot digital interface
 // First joint
 #define ARM_1_LENGTH 12.0f          // Length of first arm of robot [cm]
-#define MOTOR_1_SPEED_DEG 2.83f     // Speed of first motor [ms/deg]
+#define MOTOR_SPEED_DEG 2.83f     // Speed of first motor [ms/deg]
 #define MOTOR_1_OFFSET 90.0f        // Offset of motor 1
 
 // Second joint
 #define ARM_2_LENGTH 10.0f          // Length of second arm of robot [cm]
 
 // Third joint
-#define ARM_3_LENGTH 8.0f          // Length of third arm of robot [cm]
+#define ARM_3_LENGTH 10.0f          // Length of third arm of robot [cm]
 
 // Tolerance of error robot joint positions
 #define ROBOT_JOINT_POSITION_TOLERANCE 0.5f
