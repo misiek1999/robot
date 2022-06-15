@@ -83,9 +83,8 @@ int main() {
     wait_to_join_threads();
 
     // Close all message queue's
-    void close_all_mes_queues();
+    close_all_mes_queues();
 
-    std::cout<<"Main end."<<std::endl;
     return 0;
 }
 
@@ -111,23 +110,23 @@ bool launch_threads(){
     int thread_create_status;   // Status of creating threads
     // If creating fail, then return false
     if ((thread_create_status = pthread_create( &supervisor_thread, &supervisor_thread_attr, program_supervisor, nullptr))) {
-        fprintf(stderr, "Cannot create thread.\n");
+        std::cerr <<  "Cannot create thread.\n";
         return false;
     }
     if ((thread_create_status = pthread_create( &control_thread, &control_thread_attr, communicate_with_robot, nullptr))) {
-        fprintf(stderr, "Cannot create thread.\n");
+        std::cerr <<  "Cannot create thread.\n";
         return false;
     }
     if ((thread_create_status = pthread_create( &trajectory_thread, &trajectory_thread_attr, generate_trajectory, nullptr))) {
-        fprintf(stderr, "Cannot create thread.\n");
+        std::cerr <<  "Cannot create thread.\n";
         return false;
     }
     if ((thread_create_status = pthread_create( &console_thread, &console_thread_attr, console_interface, nullptr))) {
-        fprintf(stderr, "Cannot create thread.\n");
+        std::cerr <<  "Cannot create thread.\n";
         return false;
     }
     if ((thread_create_status = pthread_create( &log_thread, &log_thread_attr, log_data_to_file, nullptr))) {
-        fprintf(stderr, "Cannot create thread.\n");
+        std::cerr <<  "Cannot create thread.\n";
         return false;
     }
     return true;
@@ -139,7 +138,7 @@ bool setup_all_mes_queues(){
     mes_to_console_queue_attr.mq_msgsize = sizeof(mq_consol_data_t);  //Char buffer for 32 characters
     // Create message queue
     if ((mes_to_console_queue = mq_open(mes_que_name_1, O_CREAT | O_RDWR| O_NONBLOCK, 0644, &mes_to_console_queue_attr)) == -1) {
-        fprintf(stderr, "Creation of the mes queues failed 1\n");
+        std::cerr <<  "Creation of the mes queues failed 1\n";
         return false;
     }
     // Setup message queue from console to logger
@@ -148,7 +147,7 @@ bool setup_all_mes_queues(){
 //    mes_to_logger_queue_attr.mq_flags = O_NONBLOCK;
     // Create message queue
     if ((mes_to_logger_queue = mq_open(mes_que_name_2, O_CREAT | O_RDWR , 0644, &mes_to_logger_queue_attr)) == -1) {
-        fprintf(stderr, "Creation of the mes queues failed 2\n");
+        std::cerr << "Creation of the mes queues failed 2\n";
         return false;
     }
     // Setup message queue from console to trajectory
@@ -156,7 +155,7 @@ bool setup_all_mes_queues(){
     mes_to_trajectory_queue_attr.mq_msgsize = sizeof(mq_traj_manual_data_t);  //Char buffer for 32 characters
     // Create message queue
     if ((mes_to_trajectory_queue = mq_open(mes_que_name_3, O_CREAT | O_RDWR| O_NONBLOCK, 0644, &mes_to_trajectory_queue_attr)) == -1) {
-        fprintf(stderr, "Creation of the mes queues failed 3\n");
+        std::cerr << "Creation of the mes queues failed 3\n";
         return false;
     }
     // If setup is successful completed then return true
@@ -167,8 +166,7 @@ bool setup_all_mes_queues(){
 void wait_to_join_threads(){
     pthread_join(supervisor_thread, nullptr);
     pthread_join(control_thread, nullptr);
-    pthread_join(trajectory_thread, nullptr);
-    //TODO: timeout for console join on linux
+    pthread_cancel(trajectory_thread);  // terminate this thread instead of join
     pthread_join(console_thread, nullptr);
     pthread_join(log_thread, nullptr);
 }

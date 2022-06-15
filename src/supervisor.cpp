@@ -77,7 +77,7 @@ void * program_supervisor(void *pVoid){
     emergency_stop_action.sa_flags = 0;
     // Register signal handler for EMERGENCY_STOP_SIGNAL and CLOSE_PROGRAM_SIGNAL
     if (sigaction(EMERGENCY_STOP_SIGNAL, &emergency_stop_action, NULL) < 0) {
-        fprintf(stderr, "Cannot register EMERGENCY STOP handler.\n");
+        std::cerr <<  "Cannot register EMERGENCY STOP handler.\n";
         return 0;
     }
 
@@ -86,7 +86,7 @@ void * program_supervisor(void *pVoid){
     sigemptyset(&interprocess_close_action.sa_mask);
     interprocess_close_action.sa_flags = 0;
     if (sigaction(CLOSE_PROGRAM_SIGNAL, &interprocess_close_action, NULL) < 0) {
-        fprintf(stderr, "Cannot register CLOSE PROGRAM handler.\n");
+        std::cerr <<  "Cannot register CLOSE PROGRAM handler.\n";
         return 0;
     }
 
@@ -97,7 +97,7 @@ void * program_supervisor(void *pVoid){
     close_act.sa_flags = 0;
     // Register signal handler for SIGINT
     if (sigaction(EXTERNAL_CLOSE_PROGRAM, &close_act, NULL) < 0) {
-        fprintf(stderr, "Cannot register SIGINT handler.\n");
+        std::cerr <<  "Cannot register SIGINT handler.\n";
         return 0;
     }
 

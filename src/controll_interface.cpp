@@ -164,7 +164,7 @@ void* communicate_with_robot(void* _arg_input) {
     int status; // status for timer create
     /* Create timer */
     if ((status = timer_create(CLOCK_REALTIME, &timer_control_signal, &timer_to_control))) {
-        fprintf(stderr, "Error creating timer : %d\n", status);
+        std::cerr <<  "Error creating timer : "<<  status <<std::endl;
         throw std::runtime_error("Cannot crate timer");
     }
 
