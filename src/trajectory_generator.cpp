@@ -108,7 +108,7 @@ void* generate_trajectory(void *pVoid){
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,nullptr);
 
     // Enter to loop until program close
-    while(get_program_state() != ProgramState::CLOSE_PROGRAM){
+    while(true){
         // select right option to right generation mode
         switch (robot_trajectory_mode) {
             case Trajectory_control_type::UNDEFINED:    // If mode is unspecified then wait 100ms

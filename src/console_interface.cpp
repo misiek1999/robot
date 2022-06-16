@@ -315,7 +315,7 @@ void * read_console_input(void *pVoid){
     // Register signal handler for EMERGENCY_STOP_SIGNAL and INTERPOCESS_CLOSE_PROGRAM_SIGNAL
     if (sigaction(SIGNAL_EMERGENCY_STOP_CONSOLE, &emergency_stop_action, nullptr) < 0) {
         std::cerr <<  "Cannot register EMERGENCY STOP CONSOLE handler.\r\n";
-        return 0;
+        throw std::runtime_error("Cannot register EMERGENCY STOP CONSOLE handler");
     }
 
     struct sigaction interprocess_close_action;
@@ -324,7 +324,7 @@ void * read_console_input(void *pVoid){
     interprocess_close_action.sa_flags = 0;
     if (sigaction(SIGNAL_STOP_CONSOLE, &interprocess_close_action, nullptr) < 0) {
         std::cerr <<  "Cannot register STOP CONSOLE handler.\r\n";
-        return 0;
+        throw std::runtime_error("Cannot register EMERGENCY STOP CONSOLE handler");
     }
 
 

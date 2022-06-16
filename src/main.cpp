@@ -80,7 +80,7 @@ int main() {
 
     // fix bug on windows cygwin compiler
     #ifdef __CYGWIN__
-        pthread_kill(getpid());
+        return 0;
     #endif
     // Close all message queue's
     close_all_mes_queues();
