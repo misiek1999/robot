@@ -26,11 +26,11 @@ void select_trajectory_mode(){
     {
         // Display message in console
         write_to_console("Enter number to choose robot trajectory mode: ");
-        write_to_console("[1] - Manual mode \n[2] - Automatic mode");
+        write_to_console("[1] - Manual mode \r\n[2] - Automatic mode");
         // read single char from input and reset errors
         if( ! (std::cin >> mode) ) {
             std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\r\n');
             write_to_console("Invalid input. Try again");
         }
         // display a message in case of an incorrect value
@@ -85,9 +85,9 @@ inline void display_queue_messages(){
  */
 void display_manual_instruction(){
     // Display control instruction
-    write_to_console("-------------------------------------- \nTo move 1 joint press:  < [q] - [w] >");
-    write_to_console("To move 2 joint press:  < [a] - [s] >\nTo move 3 joint press:  < [z] - [x] >");
-    write_to_console("To write binary output press number from 1 to 8\n Press 'c' to exit\t\tPress 't' to stop");
+    write_to_console("-------------------------------------- \r\nTo move 1 joint press:  < [q] - [w] >");
+    write_to_console("To move 2 joint press:  < [a] - [s] >\r\nTo move 3 joint press:  < [z] - [x] >");
+    write_to_console("To write binary output press number from 1 to 8\r\nPress 'c' to exit\t\tPress 't' to stop");
     // Disable input console display
     struct termios termios;
     tcgetattr(STDIN_FILENO, &termios);
@@ -109,6 +109,9 @@ void read_control_from_console(){
     switch (read_char) {
         case 'c':
             set_program_state(ProgramState::CLOSE_PROGRAM);  // Close program after press 'q'
+            break;
+        case 't':
+            stop_robot_movement(); // Stop program after press 't'
             break;
         case 'q':
             send_manual_control(ManualModeControlInstruction::joint_1_left);  // Turn 1 joint
@@ -267,7 +270,7 @@ static void console_emergency_stop_handler(int input_signal){
  * Wait for console input in stop mode
  */
 static void console_stop_handler(int input_signal){
-    write_to_console("Press 'c' to close program or 'r' to resume");
+    write_to_console("Program stopped!\r\nPress 'c' to close program or 'r' to resume");
     char c;
     bool symbol_detected = false;
     while(!symbol_detected) {
@@ -278,6 +281,7 @@ static void console_stop_handler(int input_signal){
         } else if (c == 'r') {
             symbol_detected = true; // if char 'c' is detected then close application
             set_program_state(ProgramState::RUNNING);
+            write_to_console("Program resumed");
         }
     }
 }
@@ -310,7 +314,7 @@ void * read_console_input(void *pVoid){
     emergency_stop_action.sa_flags = 0;
     // Register signal handler for EMERGENCY_STOP_SIGNAL and INTERPOCESS_CLOSE_PROGRAM_SIGNAL
     if (sigaction(SIGNAL_EMERGENCY_STOP_CONSOLE, &emergency_stop_action, nullptr) < 0) {
-        std::cerr <<  "Cannot register EMERGENCY STOP CONSOLE handler.\n";
+        std::cerr <<  "Cannot register EMERGENCY STOP CONSOLE handler.\r\n";
         return 0;
     }
 
@@ -319,7 +323,7 @@ void * read_console_input(void *pVoid){
     sigemptyset(&interprocess_close_action.sa_mask);
     interprocess_close_action.sa_flags = 0;
     if (sigaction(SIGNAL_STOP_CONSOLE, &interprocess_close_action, nullptr) < 0) {
-        std::cerr <<  "Cannot register STOP CONSOLE handler.\n";
+        std::cerr <<  "Cannot register STOP CONSOLE handler.\r\n";
         return 0;
     }
 
@@ -368,7 +372,7 @@ void * console_interface(void *pVoid){
     pthread_attr_init(&console_read_thread_attr);
     pthread_attr_setschedpolicy(&console_read_thread_attr, SCHED_FIFO);
     if (pthread_create( &console_read_thread, &console_read_thread_attr, read_console_input, nullptr)) {
-        std::cerr <<  "Cannot create console read thread.\n";
+        std::cerr <<  "Cannot create console read thread.\r\n";
         throw std::runtime_error("Cannot create console raed thread");
     }
 
@@ -382,7 +386,7 @@ void * console_interface(void *pVoid){
     pthread_cancel(console_read_thread);
 
     // Display exit message in console
-    std::cout<<"Exit program. Thank you for your root access!"<<std::endl;
+    std::cout<<"Exit program."<<std::endl;
     return 0;
 }
 

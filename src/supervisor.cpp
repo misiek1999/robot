@@ -9,6 +9,8 @@ std::atomic <ProgramState> program_state;
 
 // change setpoint position to current position to stop robot movement
 void stop_robot_movement(){
+    // Change program state to stop
+    set_program_state(ProgramState::STOP);
     // read current robot position
     robot_joint_position_t curr_pos;
     get_current_robot_position(curr_pos);
