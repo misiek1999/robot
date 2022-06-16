@@ -386,7 +386,7 @@ void * console_interface(void *pVoid){
     pthread_cancel(console_read_thread);
 
     // Display exit message in console
-    std::cout<<"Exit program."<<std::endl<<std::endl;
+    std::cout<<"Exit program.\r\n";
     return 0;
 }
 

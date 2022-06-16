@@ -22,7 +22,6 @@ void stop_robot_movement(){
 
 // Function to close program when closing signal was detected
 static void exit_handler(int input_signal){
-    std::cerr<<pthread_self()<<std::endl;
     // Send message to log and console
     write_to_console("External stop signal detected!");
     write_to_log("External stop signal detected!");
@@ -74,8 +73,8 @@ void * program_supervisor(void *pVoid){
     // Accept all signals in this thread
     sigset_t supervisor_mask;
     sigemptyset(&supervisor_mask);
-//    sigaddset(&supervisor_mask, SIGNAL_STOP_CONSOLE); // Block stop signal to console
-//    sigaddset(&supervisor_mask, SIGNAL_EMERGENCY_STOP_CONSOLE); // Block emergency stop signal to console
+    sigaddset(&supervisor_mask, SIGNAL_STOP_CONSOLE); // Block stop signal to console
+    sigaddset(&supervisor_mask, SIGNAL_EMERGENCY_STOP_CONSOLE); // Block emergency stop signal to console
     pthread_sigmask(SIG_SETMASK, &supervisor_mask, NULL); // Add signals to supervisor_mask
 
     // Prepare signal action struct for function handler
