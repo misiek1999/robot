@@ -79,13 +79,6 @@ inline void display_queue_messages(){
     }
 }
 
-/*
- * Message displayed after close program
- */
-void close_console(){
-//    std::cout <<"Program end."<<std::endl;
-}
-
 #define ECHOFLAGS (ECHO | ECHOE | ECHOK | ECHONL)   // Define flags for linux terminal
 /*
  * Display control instruction in manual mode in console
@@ -224,11 +217,9 @@ void console_communication_auto_mode(){
     while(get_program_state() != ProgramState::CLOSE_PROGRAM){
         // display queue data from other thread's
         display_queue_messages();
-        // Wait 10ms to next
-        usleep(10000);
+        // Wait 10ms to next loop iteration
+        std::this_thread::sleep_for(std::chrono::milliseconds (10));
     }
-    // Display message after closing console
-    close_console();
 }
 
 /*
@@ -244,11 +235,9 @@ void console_communication_manual_mode(){
         read_control_from_console();
         // display queue data from other thread's
         display_queue_messages();
-        // Wait 10ms to next iteration
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        // Wait 10ms to next loop iteration
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    // Display message after closing console
-    close_console();
 }
 
 /*
@@ -263,16 +252,34 @@ void console_read_initialization(){
  * Wait for console input in emergency stop mode
  */
 static void console_emergency_stop_handler(int input_signal){
-
-
+    write_to_console("Press 'c' to close program.");
+    char c;
+    bool symbol_detected = false;
+    while(!symbol_detected){
+        std::cin >> c; // read char from console
+        if (c == 'c')
+            symbol_detected = true; // if char 'c' is detected then close application
+    }
+    set_program_state(ProgramState::CLOSE_PROGRAM);
 }
 
 /*
  * Wait for console input in stop mode
  */
 static void console_stop_handler(int input_signal){
-
-
+    write_to_console("Press 'c' to close program or 'r' to resume");
+    char c;
+    bool symbol_detected = false;
+    while(!symbol_detected) {
+        std::cin >> c; // read char from console
+        if (c == 'c') {
+            symbol_detected = true; // if char 'c' is detected then close application
+            set_program_state(ProgramState::CLOSE_PROGRAM);
+        } else if (c == 'r') {
+            symbol_detected = true; // if char 'c' is detected then close application
+            set_program_state(ProgramState::RUNNING);
+        }
+    }
 }
 
 /*
