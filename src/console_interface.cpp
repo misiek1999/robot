@@ -281,7 +281,7 @@ static void console_stop_handler(int input_signal){
         } else if (c == 'r') {
             symbol_detected = true; // if char 'c' is detected then close application
             set_program_state(ProgramState::RUNNING);
-            write_to_console("Program resumed");
+            write_to_console("\rProgram resumed");
         }
     }
 }
@@ -386,7 +386,7 @@ void * console_interface(void *pVoid){
     pthread_cancel(console_read_thread);
 
     // Display exit message in console
-    std::cout<<"Exit program."<<std::endl;
+    std::cout<<"Exit program."<<std::endl<<std::endl;
     return 0;
 }
 

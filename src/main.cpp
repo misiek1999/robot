@@ -51,9 +51,9 @@ pthread_attr_t console_thread_attr;
 pthread_attr_t log_thread_attr;
 
 // Message queues variable
-char mes_que_name_1[20] = "/mesQueCons2";
-char mes_que_name_2[20] = "/meqQueLog2";
-char mes_que_name_3[20] = "/mes_que_traj2";
+char mes_que_name_1[20] = "/mesQueCons";
+char mes_que_name_2[20] = "/meqQueLog";
+char mes_que_name_3[20] = "/mes_que_traj";
 
 // Main function
 int main() {
@@ -78,10 +78,6 @@ int main() {
     // Wait to join all threads
     wait_to_join_threads();
 
-    // fix bug on windows cygwin compiler
-    #ifdef __CYGWIN__
-        return 0;
-    #endif
     // Close all message queue's
     close_all_mes_queues();
 
