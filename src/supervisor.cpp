@@ -14,10 +14,13 @@ void stop_robot_movement(){
     get_current_robot_position(curr_pos);
     // lock robot at current position
     write_setpoint_robot_position(curr_pos);
+    // send stop signal to rad console thead
+    kill(getpid(), SIGNAL_STOP_CONSOLE);
 }
 
 // Function to close program when closing signal was detected
 static void exit_handler(int input_signal){
+    std::cerr<<pthread_self()<<std::endl;
     // Send message to log and console
     write_to_console("External stop signal detected!");
     write_to_log("External stop signal detected!");
@@ -38,6 +41,8 @@ static void emergency_stop_handler(int input_signal){
     // Send message to log and console
     write_to_console("Emergency stop detected!");
     write_to_log("Emergency stop detected!");
+    // send emergency stop signal to console read thread
+    kill(getpid(), SIGNAL_EMERGENCY_STOP_CONSOLE);
 }
 
 // Get program state
@@ -50,7 +55,7 @@ void set_program_state(const ProgramState _state_to_set){
     program_state = _state_to_set;
     // Check if selected state is CLOSE_PROGRAM
     if (program_state == ProgramState::CLOSE_PROGRAM)
-        kill(getpid(), CLOSE_PROGRAM_SIGNAL);    // send interprocess signal to stop supervisor thread
+        kill(getpid(), INTERPOCESS_CLOSE_PROGRAM_SIGNAL);    // send interprocess signal to stop supervisor thread
 }
 
 // Supervisor thread function
@@ -67,7 +72,8 @@ void * program_supervisor(void *pVoid){
     // Accept all signals in this thread
     sigset_t supervisor_mask;
     sigemptyset(&supervisor_mask);
-    sigaddset(&supervisor_mask, POSITION_REACH_SIGNAL); // Block signal with reached position
+//    sigaddset(&supervisor_mask, SIGNAL_STOP_CONSOLE); // Block stop signal to console
+//    sigaddset(&supervisor_mask, SIGNAL_EMERGENCY_STOP_CONSOLE); // Block emergency stop signal to console
     pthread_sigmask(SIG_SETMASK, &supervisor_mask, NULL); // Add signals to supervisor_mask
 
     // Prepare signal action struct for function handler
@@ -75,7 +81,7 @@ void * program_supervisor(void *pVoid){
     emergency_stop_action.sa_handler = emergency_stop_handler;
     sigemptyset(&emergency_stop_action.sa_mask);
     emergency_stop_action.sa_flags = 0;
-    // Register signal handler for EMERGENCY_STOP_SIGNAL and CLOSE_PROGRAM_SIGNAL
+    // Register signal handler for EMERGENCY_STOP_SIGNAL and INTERPOCESS_CLOSE_PROGRAM_SIGNAL
     if (sigaction(EMERGENCY_STOP_SIGNAL, &emergency_stop_action, NULL) < 0) {
         std::cerr <<  "Cannot register EMERGENCY STOP handler.\n";
         return 0;
@@ -85,7 +91,7 @@ void * program_supervisor(void *pVoid){
     interprocess_close_action.sa_handler = interprocess_exit_handler;
     sigemptyset(&interprocess_close_action.sa_mask);
     interprocess_close_action.sa_flags = 0;
-    if (sigaction(CLOSE_PROGRAM_SIGNAL, &interprocess_close_action, NULL) < 0) {
+    if (sigaction(INTERPOCESS_CLOSE_PROGRAM_SIGNAL, &interprocess_close_action, NULL) < 0) {
         std::cerr <<  "Cannot register CLOSE PROGRAM handler.\n";
         return 0;
     }

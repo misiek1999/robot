@@ -57,10 +57,6 @@ char mes_que_name_3[20] = "/mes_que_traj2";
 
 // Main function
 int main() {
-    // Clear console buffer
-    std::cin.clear();
-    fflush(stdin);
-
     // Initialize all message queue in main thread before launching other thread to avoid access error
     if (!setup_all_mes_queues())// If initialization failed then stop application
         exit(EXIT_FAILURE);
@@ -89,10 +85,6 @@ int main() {
 }
 
 bool launch_threads(){
-    /* Scheduling policy: FIFO or RR */
-    int policy;
-    /* Structure of other thread parameters */
-    struct sched_param param;
     /* Initialize thread attributes structure for FIFO scheduling */
     pthread_attr_init(&supervisor_thread_attr);
     pthread_attr_init(&control_thread_attr);

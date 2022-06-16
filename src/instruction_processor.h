@@ -45,7 +45,6 @@ struct __attribute__ ((packed)) IfInstructionDataType{
     robot_digital_data_type data_to_compare;
     InstructionIteratorType address_to_jump;
 };
-
 /*
  * Instruction data for each instruction
  */

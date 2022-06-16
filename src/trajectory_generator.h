@@ -22,9 +22,6 @@
 #include "controll_interface.h"
 #include "instruction_processor.h"
 
-// Internal signal indicating that the set position has been reached
-#define POSITION_REACH_SIGNAL SIGUSR2
-
 // global state of loading trajectory from file
 extern std::atomic<bool> is_file_trajectory_load;
 

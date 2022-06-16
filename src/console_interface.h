@@ -22,8 +22,9 @@
 #include "stdlib.h"
 #include "math.h"
 
-// Global constance variable
- #define MAX_CONSOLE_MESSAGE_QUEUE_SIZE_BUFFER 128
+// Signal used to communicate with console
+#define SIGNAL_STOP_CONSOLE SIGRTMIN+1
+#define SIGNAL_EMERGENCY_STOP_CONSOLE SIGRTMIN+2
 
 // Global message queue to console
  extern mqd_t	mes_to_console_queue;
@@ -31,7 +32,7 @@ extern struct	mq_attr mes_to_console_queue_attr;
 
 // Message queue buffer type and queue size
 #define MAX_MESSAGES_IN_QUEUE 10
-typedef char mq_consol_data_t[32];
+typedef char mq_consol_data_t[100];
 
 // Define function which interface with console
 // Run this task on low priority thread

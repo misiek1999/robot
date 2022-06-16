@@ -25,20 +25,19 @@ void select_trajectory_mode(){
     while(!correct_mode)
     {
         // Display message in console
-        std::cout << "Enter number to choose robot trajectory mode:"<<std::endl;
-        std::cout <<"[1] - Manual mode" << std::endl;
-        std::cout <<"[2] - Automatic mode" << std::endl;
+        write_to_console("Enter number to choose robot trajectory mode: ");
+        write_to_console("[1] - Manual mode \n[2] - Automatic mode");
         // read single char from input and reset errors
         if( ! (std::cin >> mode) ) {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            std::cerr << "Invalid input. Try again.\n";
+            write_to_console("Invalid input. Try again");
         }
         // display a message in case of an incorrect value
         if (std::isdigit(mode) && mode - 48 > 0 && mode - 48 < 3)
             correct_mode = true; //
         else
-            std::cout<< "Invalid input. Try again.\n";
+            write_to_console("Invalid input. Try again");
         if (get_program_state() == ProgramState::CLOSE_PROGRAM)
             return;
     }
@@ -46,11 +45,11 @@ void select_trajectory_mode(){
     robot_trajectory_mode = static_cast<Trajectory_control_type> (mode - 48);
     // Display correct value
     if (robot_trajectory_mode == Trajectory_control_type::AUTO) {
-        std::cout << "Selected  mode: Auto" << std::endl;
+        write_to_console("Selected  mode: Auto");
         write_to_log("Selected mode : Auto");
     }
     else{
-        std::cout << "Selected  mode: Manual"<< std::endl;
+        write_to_console("Selected  mode: Manual");
         write_to_log("Selected mode : Manual");
     }
 }
@@ -93,13 +92,10 @@ void close_console(){
  */
 void display_manual_instruction(){
     // Display control instruction
-    std::cout <<"--------------------------------------"<<std::endl;
-    std::cout << "To move 1 joint press:  < [q] - [w] >"<<std::endl;
-    std::cout << "To move 2 joint press:  < [a] - [s] >"<<std::endl;
-    std::cout << "To move 3 joint press:  < [z] - [x] >"<<std::endl;
-    std::cout << "To write binary output press number from 1 to 8"<<std::endl;
-    std::cout << "Press 'c' to exit"<<std::endl;
-    // Disable console input display
+    write_to_console("-------------------------------------- \nTo move 1 joint press:  < [q] - [w] >");
+    write_to_console("To move 2 joint press:  < [a] - [s] >\nTo move 3 joint press:  < [z] - [x] >");
+    write_to_console("To write binary output press number from 1 to 8\n Press 'c' to exit\t\tPress 't' to stop");
+    // Disable input console display
     struct termios termios;
     tcgetattr(STDIN_FILENO, &termios);
     termios.c_lflag &= ~ECHO;
@@ -154,7 +150,7 @@ void read_control_from_console(){
  */
 std::string read_file_path_from_console(){
     std::string path_to_file;
-    std::cout << "Enter the full path of the file" << std::endl;    // Display path request message
+    write_to_console( "Enter the full path of the file");   // Display path request message
     bool path_is_correct = false;   // bool variable to stop reading data from console
     int res;    // variable to check file is exist
     while(!path_is_correct){
@@ -164,13 +160,15 @@ std::string read_file_path_from_console(){
         if (res == 0)   // If res value is non-negative then path is correct
             path_is_correct = true; // end loop when file exist
         else
-            std::cout<<"Invalid path! Please specified valid path." <<std::endl;
+            write_to_console("Invalid path! Please specified valid path." );
         // If program is shutdown, then return nullptr
         if (get_program_state() == ProgramState::CLOSE_PROGRAM)
             return std::string("");
     }
     // Works only on unix system
-    std::cout<<"Specified path is correct. Path: \\e[3 " <<path_to_file<<" \\e[0m" <<std::endl;
+    char buff [100];
+    sprintf(buff, "Specified path is correct. Path: \\e[3 ] %s \\e[0m", path_to_file.c_str());
+    write_to_console(buff);
     return path_to_file;
 }
 
@@ -196,7 +194,7 @@ void read_trajectory_from_file(std::string _path_to_file){
         trajectory_instruction_buffer_mutex.unlock();
         is_file_trajectory_load = true;
         // Display message after successful read data from file
-        std::cout<< "File loaded successful! "<<std::endl;
+        write_to_console("File loaded successful! ");
         char str[32];
         sprintf(str,"Trajectory loaded from file: %s", _path_to_file.c_str());
         write_to_log(str);
@@ -246,8 +244,8 @@ void console_communication_manual_mode(){
         read_control_from_console();
         // display queue data from other thread's
         display_queue_messages();
-        //        // Wait 10ms to next iteration
-        //        usleep(10000);
+        // Wait 10ms to next iteration
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     // Display message after closing console
     close_console();
@@ -256,18 +254,31 @@ void console_communication_manual_mode(){
 /*
  * Function below display welcome message and is waiting for the appropriate mode to be specified
  */
-void console_communication_initialization(){
-    // Display welcome message
-    std::cout <<"Welcome to robot trajectory generator!" <<std::endl;
+void console_read_initialization(){
     // Select trajectory generation mode
     select_trajectory_mode();
 }
 
 /*
- * Function to communication with console
- * Initialise the data exchange between threads and set the necessary parameters
+ * Wait for console input in emergency stop mode
  */
-void * console_interface(void *pVoid){
+static void console_emergency_stop_handler(int input_signal){
+
+
+}
+
+/*
+ * Wait for console input in stop mode
+ */
+static void console_stop_handler(int input_signal){
+
+
+}
+
+/*
+ * Read console input in separate thread
+ */
+void * read_console_input(void *pVoid){
     // Init thread priority
     int policy;     //Scheduling policy: FIFO or RR
     struct sched_param param;   //Structure of other thread parameters
@@ -275,10 +286,43 @@ void * console_interface(void *pVoid){
     pthread_getschedparam( pthread_self(), &policy, &param);
     param.sched_priority = sched_get_priority_min(policy);  // Read minimum value for thread priority
     pthread_setschedparam( pthread_self(), policy-1, &param);   //set almost minimum thread priority for this thread
+    // set cancel mode in this thread
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,nullptr);
 
-    //Initialize console
-    console_communication_initialization();
+    // Accept only stop and emergency stop signal in this thread
+    sigset_t read_mask;
+    sigfillset(&read_mask);
+    sigdelset(&read_mask, SIGNAL_STOP_CONSOLE); // Block stop signal to console
+    sigdelset(&read_mask, SIGNAL_EMERGENCY_STOP_CONSOLE); // Block emergency stop signal to console
+    pthread_sigmask(SIG_SETMASK, &read_mask, nullptr); // Add signals to supervisor_mask
+
+    // set handler for upper signals
+    struct sigaction emergency_stop_action;
+    emergency_stop_action.sa_handler = console_emergency_stop_handler;
+    sigemptyset(&emergency_stop_action.sa_mask);
+    emergency_stop_action.sa_flags = 0;
+    // Register signal handler for EMERGENCY_STOP_SIGNAL and INTERPOCESS_CLOSE_PROGRAM_SIGNAL
+    if (sigaction(SIGNAL_EMERGENCY_STOP_CONSOLE, &emergency_stop_action, nullptr) < 0) {
+        std::cerr <<  "Cannot register EMERGENCY STOP CONSOLE handler.\n";
+        return 0;
+    }
+
+    struct sigaction interprocess_close_action;
+    interprocess_close_action.sa_handler = console_stop_handler;
+    sigemptyset(&interprocess_close_action.sa_mask);
+    interprocess_close_action.sa_flags = 0;
+    if (sigaction(SIGNAL_STOP_CONSOLE, &interprocess_close_action, nullptr) < 0) {
+        std::cerr <<  "Cannot register STOP CONSOLE handler.\n";
+        return 0;
+    }
+
+
+    //Initialize console input
+    console_read_initialization();
+
+    // Select right program mode
     if (get_program_state() != ProgramState::CLOSE_PROGRAM)
+
         // Select mode of communication
         switch(robot_trajectory_mode)
         {
@@ -289,9 +333,47 @@ void * console_interface(void *pVoid){
                 console_communication_manual_mode();// Select function to communication in manual mode
                 break;
             default: //Undefined case
-                std::cout<<"Undefined mode! Stop application."<<std::endl; // Display error message
-                throw std::runtime_error("error"); //Stop program
+                write_to_console("Undefined mode! Stop application."); // Display error message
+                throw std::runtime_error("Undefined mode error!"); //Stop program
         }
+    return 0;
+}
+
+/*
+ * Function to communication with console
+ * Initialise the data exchange between threads and set the necessary parameters
+ */
+void * console_interface(void *pVoid){
+    // Display welcome message
+    std::cout <<"Welcome to robot trajectory generator!" <<std::endl;
+
+    // Init thread priority
+    int policy;     //Scheduling policy: FIFO or RR
+    struct sched_param param;   //Structure of other thread parameters
+    /* Read modify and set new thread priority */
+    pthread_getschedparam( pthread_self(), &policy, &param);
+    param.sched_priority = sched_get_priority_min(policy);  // Read minimum value for thread priority
+    pthread_setschedparam( pthread_self(), policy-2, &param);   //set almost minimum -2  thread priority for this thread
+
+    // Create thread to read console input
+    pthread_t console_read_thread;
+    pthread_attr_t console_read_thread_attr;
+    pthread_attr_init(&console_read_thread_attr);
+    pthread_attr_setschedpolicy(&console_read_thread_attr, SCHED_FIFO);
+    if (pthread_create( &console_read_thread, &console_read_thread_attr, read_console_input, nullptr)) {
+        std::cerr <<  "Cannot create console read thread.\n";
+        throw std::runtime_error("Cannot create console raed thread");
+    }
+
+    // display messages from other threads until program end
+    while(get_program_state() != ProgramState::CLOSE_PROGRAM){
+        // display queue data from other thread's
+        display_queue_messages();
+    }
+
+    // terminate console input thread
+    pthread_cancel(console_read_thread);
+
     // Display exit message in console
     std::cout<<"Exit program. Thank you for your root access!"<<std::endl;
     return 0;

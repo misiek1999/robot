@@ -14,7 +14,7 @@
 // External close signal
 #define EXTERNAL_CLOSE_PROGRAM SIGINT
 // Interprocess close signal
-#define CLOSE_PROGRAM_SIGNAL SIGUSR1
+#define INTERPOCESS_CLOSE_PROGRAM_SIGNAL SIGUSR1
 //Interprocess emergency stop signal
 #define EMERGENCY_STOP_SIGNAL SIGRTMIN
 
