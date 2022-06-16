@@ -130,7 +130,6 @@ void send_robot_position_packet(){
     // check is message is not sent property
     if (status < 0){
         write_to_log("Cannot send packet");
-        std::cerr << "cannot save to log: "<< strerror(errno) << std::endl;
     }
 }
 
@@ -183,9 +182,7 @@ void* communicate_with_robot(void* _arg_input) {
       }
 
     //stop timer
-    timer_control_spec.it_value.tv_nsec = 0;//set timer value to 0 to stop timer
-    timer_control_spec.it_interval.tv_nsec = 0;
-    timer_settime( timer_to_control, 0, &timer_control_spec, NULL);
+    timer_delete(timer_to_control);
 
     //close socket and other communication with robot
     close_robot_communication();

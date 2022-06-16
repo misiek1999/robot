@@ -78,6 +78,10 @@ int main() {
     // Wait to join all threads
     wait_to_join_threads();
 
+    // fix bug on windows cygwin compiler
+    #ifdef __CYGWIN__
+        pthread_kill(getpid());
+    #endif
     // Close all message queue's
     close_all_mes_queues();
 
