@@ -23,8 +23,8 @@ void stop_robot_movement(){
 // Function to close program when closing signal was detected
 static void exit_handler(int input_signal){
     // Send message to log and console
-    write_to_console("External stop signal detected!");
-    write_to_log("External stop signal detected!");
+    write_to_console("External close signal detected!");
+    write_to_log("External close signal detected!");
     // set close state in program
     set_program_state(ProgramState::CLOSE_PROGRAM);
 }
