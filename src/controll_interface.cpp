@@ -54,13 +54,12 @@ void initialize_robot_communication(){
     // Set socket address parameters
     socket_udp_control_send_addr.sin_family = AF_INET; //set IPV4 protocol
     socket_udp_control_send_addr.sin_port = htons(UDP_CONTROL_PORT_SEND); // set udp port
-    socket_udp_control_send_addr.sin_addr.s_addr = INADDR_ANY;//INADDR_BROADCAST;   // bind to all address
+    socket_udp_control_send_addr.sin_addr.s_addr = INADDR_ANY; // bind to all address
 
     // Create socket using UDP to receive packet
     control_socket_receive = socket(AF_INET, SOCK_DGRAM, 0);
     // Check is socket create property
     if (control_socket_receive == -1) {
-
         write_to_log("Cannot create received socket UDP ");
         throw std::runtime_error("Error during create received socket");
     }
@@ -70,20 +69,21 @@ void initialize_robot_communication(){
     socket_udp_control_receive_addr.sin_family = AF_INET; //set IPV4 protocol
     socket_udp_control_receive_addr.sin_port = htons(UDP_CONTROL_PORT_RECEIVE); // set udp port
     socket_udp_control_receive_addr.sin_addr.s_addr = INADDR_ANY;   // bind to all address
-    // Bind socket to socket address struct
-    if(bind(control_socket_receive, (struct sockaddr *)&socket_udp_control_receive_addr,
-            sizeof(socket_udp_control_receive_addr)) == -1) {
-        close(control_socket_receive);
-        std::cerr<<"Cannot bind socket"<<std::endl;
-        throw std::runtime_error("cannot bind socket");
-    }
+
     // set 1sec timeout for receive
     struct timeval timeout;
     timeout.tv_sec = 1;
     timeout.tv_usec = 0;
-    setsockopt(control_socket_receive, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    setsockopt(control_socket_receive, SOL_SOCKET, SO_RCVTIMEO,  (const char*)&timeout, sizeof(timeout));
     addr_length_receive = sizeof(server_addr);
 
+    // Bind socket to socket address struct
+    if(bind(control_socket_receive, (struct sockaddr *)&socket_udp_control_receive_addr,
+            sizeof(socket_udp_control_receive_addr)) == -1) {
+        close(control_socket_receive);
+        write_to_log("Cannot bind UDP receive socket");
+        throw std::runtime_error("cannot bind socket");
+    }
 }
 
 // close robot connection sockets
