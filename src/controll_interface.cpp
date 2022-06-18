@@ -176,9 +176,9 @@ void* communicate_with_robot(void* _arg_input) {
     /* Change timer parameters and run */
     timer_settime( timer_to_control, 0, &timer_control_spec, NULL);
 
-    // Enter to infinite loop until close program to receive packet with timeout 10ms
+    // Enter to infinite loop until close program to receive packet with timeout 1s
     while(get_program_state() != ProgramState::CLOSE_PROGRAM){  //stop if program is shutdown
-        receive_robot_position_packet();    // Try to receive udp packet with 10ms timeout
+        receive_robot_position_packet();    // Try to receive udp packet with 1s timeout
       }
 
     //stop timer

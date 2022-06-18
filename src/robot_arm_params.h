@@ -28,7 +28,6 @@ typedef std::atomic <robot_digital_data_type> robot_binary_interface_t; // Atomi
 // First joint
 #define ARM_1_LENGTH 12.0f          // Length of first arm of robot [cm]
 #define MOTOR_SPEED_DEG 2.83f     // Speed of first motor [ms/deg]
-#define MOTOR_1_OFFSET 90.0f        // Offset of motor 1
 
 // Second joint
 #define ARM_2_LENGTH 10.0f          // Length of second arm of robot [cm]

@@ -27,7 +27,7 @@ struct	mq_attr mes_to_trajectory_queue_attr;
     // check each joint if limits are correct
     for (size_t itr = 0; itr < NUMBER_OF_ROBOT_JOINT; ++itr){
         // If minimum or maximum value is not correct then return false
-        if (ROBOT_JOINT_LIMIT_ARRAY[itr][0] < _position[itr] || ROBOT_JOINT_LIMIT_ARRAY[itr][1] > _position[itr])
+        if (ROBOT_JOINT_LIMIT_ARRAY[itr][0] > _position[itr] || ROBOT_JOINT_LIMIT_ARRAY[itr][1] < _position[itr])
             return false;
     }
     // if limits are correct return true
@@ -53,26 +53,26 @@ void manual_control(){
         // Create local variable for current robot position
         robot_joint_position_t curr_pos;
         // read current robot position
-        get_current_robot_position(curr_pos);
+        get_setpoint_robot_position(curr_pos);
         // set new value for joint position
         switch (instruction) {
             case ManualModeControlInstruction::joint_1_left:
-                curr_pos[0] = MANUAL_MODE_CONTROL_CHANGE_VALUE;
+                curr_pos[0] += MANUAL_MODE_CONTROL_CHANGE_VALUE;
                 break;
             case ManualModeControlInstruction::joint_1_right:
-                curr_pos[0] = -MANUAL_MODE_CONTROL_CHANGE_VALUE;
+                curr_pos[0] += -MANUAL_MODE_CONTROL_CHANGE_VALUE;
                 break;
             case ManualModeControlInstruction::joint_2_left:
-                curr_pos[1] = MANUAL_MODE_CONTROL_CHANGE_VALUE;
+                curr_pos[1] += MANUAL_MODE_CONTROL_CHANGE_VALUE;
                 break;
             case ManualModeControlInstruction::joint_2_right:
-                curr_pos[1] = -MANUAL_MODE_CONTROL_CHANGE_VALUE;
+                curr_pos[1] += -MANUAL_MODE_CONTROL_CHANGE_VALUE;
                 break;
             case ManualModeControlInstruction::joint_3_left:
-                curr_pos[2] = MANUAL_MODE_CONTROL_CHANGE_VALUE;
+                curr_pos[2] += MANUAL_MODE_CONTROL_CHANGE_VALUE;
                 break;
             case ManualModeControlInstruction::joint_3_right:
-                curr_pos[2] = -MANUAL_MODE_CONTROL_CHANGE_VALUE;
+                curr_pos[2] += -MANUAL_MODE_CONTROL_CHANGE_VALUE;
                 break;
         }
         // Check joint limit
