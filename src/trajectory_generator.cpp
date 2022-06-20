@@ -102,8 +102,8 @@ void* generate_trajectory(void *pVoid){
 
     /* Read modify and set new thread priority */
     pthread_getschedparam( pthread_self(), &policy, &param);
-    param.sched_priority = sched_get_priority_max(policy);  // Read minimum value for thread priority
-    pthread_setschedparam( pthread_self(), policy+3, &param);   //set thread priority for this thread to max + 3
+    param.sched_priority = sched_get_priority_max(policy) - 3;  // Read minimum value for thread priority
+    pthread_setschedparam( pthread_self(), policy, &param);   //set thread priority for this thread to max -3
     // set cancel mode in this thread
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,nullptr);
 

@@ -69,8 +69,8 @@ void write_to_console(const  char* str_to_console){
  * Inline function to reduce unnecessary calls
  */
 inline void display_queue_messages(){
-    // Timeout for receive data 25ms
-    struct timespec rec_timeout = {0, 25000000};
+    // Timeout for receive data 10ms
+    struct timespec rec_timeout = {0, 10000000};
     // read data from queue
     int status = mq_timedreceive(mes_to_console_queue, (char *)&mq_console_read_data[0], sizeof(mq_consol_data_t), NULL, &rec_timeout);
     if (status >= 0 ) { // If message is receive successful then save it to file
@@ -295,8 +295,8 @@ void * read_console_input(void *pVoid){
     struct sched_param param;   //Structure of other thread parameters
     /* Read modify and set new thread priority */
     pthread_getschedparam( pthread_self(), &policy, &param);
-    param.sched_priority = sched_get_priority_min(policy);  // Read minimum value for thread priority
-    pthread_setschedparam( pthread_self(), policy-1, &param);   //set almost minimum thread priority for this thread
+    param.sched_priority = sched_get_priority_min(policy)+1;  // Read minimum value for thread priority
+    pthread_setschedparam( pthread_self(), policy, &param);   //set almost minimum thread priority for this thread
     // set cancel mode in this thread
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,nullptr);
 
@@ -363,8 +363,8 @@ void * console_interface(void *pVoid){
     struct sched_param param;   //Structure of other thread parameters
     /* Read modify and set new thread priority */
     pthread_getschedparam( pthread_self(), &policy, &param);
-    param.sched_priority = sched_get_priority_min(policy);  // Read minimum value for thread priority
-    pthread_setschedparam( pthread_self(), policy-2, &param);   //set almost minimum -2  thread priority for this thread
+    param.sched_priority = sched_get_priority_min(policy) +2;  // Read minimum value for thread priority
+    pthread_setschedparam( pthread_self(), policy, &param);   //set almost minimum +2  thread priority for this thread
 
     // Create thread to read console input
     pthread_t console_read_thread;

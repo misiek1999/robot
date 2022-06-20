@@ -111,10 +111,19 @@ void receive_robot_position_packet(){
         // unlock robot current joint position mutex
         current_robot_position_mutex.unlock();
     }
+    else
+        std::cerr<<"rec: "<<status<<" -> "<< strerror(errno) <<std::endl;
 }
 
 // Write robot position to reach
 void send_robot_position_packet(){
+    // Init thread priority
+    int policy;     //Scheduling policy: FIFO or RR
+    struct sched_param param;   //Structure of other thread parameters
+    /* Read modify and set new thread priority */
+    pthread_getschedparam( pthread_self(), &policy, &param);
+    param.sched_priority = sched_get_priority_max(policy) - 1;  // Read minimum value for thread priority
+    pthread_setschedparam( pthread_self(), policy, &param);   //set max -1 thread priority for this thread
     // Packet to send
     PacketToSend packet_to_send;
     // create variable for setpoint position and digital output
@@ -142,8 +151,8 @@ void* communicate_with_robot(void* _arg_input) {
 
     /* Read modify and set new thread priority */
     pthread_getschedparam( pthread_self(), &policy, &param);
-    param.sched_priority = sched_get_priority_max(policy);  // Read minimum value for thread priority
-    pthread_setschedparam( pthread_self(), policy+2, &param);   //set max+1 thread priority for this thread
+    param.sched_priority = sched_get_priority_max(policy) - 2;  // Read minimum value for thread priority
+    pthread_setschedparam( pthread_self(), policy, &param);   //set max -2 thread priority for this thread
 
     // Initialize communication with robot
     initialize_robot_communication();

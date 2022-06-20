@@ -84,6 +84,7 @@ void * log_data_to_file(void *pVoid){
     return 0;
 }
 
+
 // Send message to log queue
 void write_to_log(const  char* str_to_log){
     int status = mq_send(mes_to_logger_queue, (const char *)&str_to_log[0], sizeof(mq_log_data_t), 0);
