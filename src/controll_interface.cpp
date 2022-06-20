@@ -111,8 +111,8 @@ void receive_robot_position_packet(){
         // unlock robot current joint position mutex
         current_robot_position_mutex.unlock();
     }
-    else
-        std::cerr<<"rec: "<<status<<" -> "<< strerror(errno) <<std::endl;
+//    else
+//        std::cerr<<"rec: "<<status<<" -> "<< strerror(errno) <<std::endl;
 }
 
 // Write robot position to reach

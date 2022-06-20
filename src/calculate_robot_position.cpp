@@ -33,6 +33,11 @@ void calculate_inverse_robot_kinematics(Manipulator_position cartesian_position,
     float theta = atan2(ARM_3_LENGTH*sin(angle_3),ARM_2_LENGTH + ARM_3_LENGTH*cos(angle_3));
     float angle_2 = beta + theta;
 
+    // convert rad to deg
+    angle_1 = angle_1 * 180 / M_PI;
+    angle_2 = angle_2 * 180 / M_PI;
+    angle_3 = angle_3 * 180 / M_PI;
+
     // save the calculated values to output array
     calculated_joint_position[0] = angle_1;
     calculated_joint_position[1] = angle_2;
@@ -49,6 +54,11 @@ void calculate_simple_robot_kinematics(Manipulator_position cartesian_position,
     float joint_1_angle = joint_position[0];
     float joint_2_angle = joint_position[1];
     float joint_3_angle = joint_position[2];
+
+    // convert deg to rads
+    joint_1_angle = joint_1_angle * M_PI / 180;
+    joint_2_angle = joint_2_angle * M_PI / 180;
+    joint_3_angle = joint_3_angle * M_PI / 180;
 
     // find manipulator position
     float dx; // joint 2 and 3 2D position x
