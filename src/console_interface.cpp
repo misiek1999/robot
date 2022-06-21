@@ -105,6 +105,7 @@ void read_control_from_console(){
     // Set the terminal to raw mode, works only on linux
     system("stty raw");
     read_char = getchar();    // Read char from console
+    fflush(stdin);  // clear console input buffer
     // Select right option
     switch (read_char) {
         case 'c':
@@ -142,37 +143,10 @@ void read_control_from_console(){
 }
 
 /*
- * Function to read correct file path from console
- */
-std::string read_file_path_from_console(){
-    std::string path_to_file;
-    write_to_console( "Enter the full path of the file");   // Display path request message
-    bool path_is_correct = false;   // bool variable to stop reading data from console
-    int res;    // variable to check file is exist
-    while(!path_is_correct){
-        std::cin >> path_to_file; // read file path from console
-        // check file exist
-        res = access(path_to_file.c_str(), R_OK);   //check file is exist
-        if (res == 0)   // If res value is non-negative then path is correct
-            path_is_correct = true; // end loop when file exist
-        else
-            write_to_console("Invalid path! Please specified valid path." );
-        // If program is shutdown, then return nullptr
-        if (get_program_state() == ProgramState::CLOSE_PROGRAM)
-            return std::string("");
-    }
-    // Works only on unix system
-    char buff [100];
-    sprintf(buff, "Specified path is correct. Path: \\e[3 ] %s \\e[0m", path_to_file.c_str());
-    write_to_console(buff);
-    return path_to_file;
-}
-
-/*
  * File to read predefined trajectory from file
  * also makes the read data available to the trajectory generator
  */
-void read_trajectory_from_file(std::string _path_to_file){
+bool read_trajectory_from_file(std::string _path_to_file){
     // Open file
     std::ifstream file;
     file.open(_path_to_file);
@@ -197,11 +171,47 @@ void read_trajectory_from_file(std::string _path_to_file){
     }
     else
     {
-        // Display error message and throw error
-        std::cout<< "Error while opening file. Exit program"<<std::endl;
-        throw std::runtime_error("error");
+        write_to_console("Cannot open file");
+        return false;
     }
     file.close();   //Close file after completed read
+    return true;
+}
+
+/*
+ * Function to read correct file path from console
+ */
+void read_file_from_console_path(){
+    std::string path_to_file;
+    write_to_console( "Enter the full path of the file");   // Display path request message
+    bool path_is_correct = false;   // bool variable to stop reading data from console
+    int res;    // variable to check file is exist
+    while(!path_is_correct){
+        std::cin >> path_to_file; // read file path from console
+        // check file exist
+        res = access(path_to_file.c_str(), R_OK);   //check file is exist
+        if (res == 0) {  // If res value is non-negative then path is correct
+            // Check extension of file
+            if(path_to_file.substr(path_to_file.find_last_of(".") + 1) == "bin") {  // binary file
+                // try to open file and read trajectory from file
+                if(read_trajectory_from_file(path_to_file))
+                    path_is_correct = true;
+            } else {    // text file
+                trajectory_instruction_buffer_mutex.lock();
+                if(read_instruction_from_file(path_to_file, trajectory_instruction_buffer) == 0)
+                    path_is_correct = true;
+                trajectory_instruction_buffer_mutex.unlock();
+            }
+        }else
+            write_to_console("Invalid path! Please specified valid path." );
+        // If program is shutdown, then return
+        if (get_program_state() == ProgramState::CLOSE_PROGRAM)
+            return;
+    }
+    // Works only on unix system
+    char buff [100];
+    sprintf(buff, "Specified path is correct. Path: \\e[3 ] %s \\e[0m", path_to_file.c_str());
+    write_to_console(buff);
 }
 
 /*
@@ -210,12 +220,10 @@ void read_trajectory_from_file(std::string _path_to_file){
  */
 void console_communication_auto_mode(){
     // Read path to predefined trajectory from console
-    std::string trajectory_path = read_file_path_from_console();
+    read_file_from_console_path();
     // If program is shutdown before final setup, close function
     if (get_program_state() == ProgramState::CLOSE_PROGRAM)
         return;
-    // try to open file and read trajectory from file
-    read_trajectory_from_file(trajectory_path);
     // Enter to infinity loop until the program is terminated
     while(get_program_state() != ProgramState::CLOSE_PROGRAM){
         // display queue data from other thread's
@@ -326,7 +334,6 @@ void * read_console_input(void *pVoid){
         std::cerr <<  "Cannot register STOP CONSOLE handler.\r\n";
         throw std::runtime_error("Cannot register EMERGENCY STOP CONSOLE handler");
     }
-
 
     //Initialize console input
     console_read_initialization();

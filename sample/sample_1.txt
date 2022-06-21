@@ -1,0 +1,4 @@
+fine 12 10 10 10
+go_ptp 0 0 90
+wait 500
+exit

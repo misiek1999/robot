@@ -12,6 +12,8 @@
 #include "pthread.h"
 #include "string"
 #include "unistd.h"
+#include "instruction_processor.h"
+#include "read_instruction_file.h"
 #include "controll_interface.h"
 #include "trajectory_generator.h"
 #include "supervisor.h"
@@ -21,6 +23,7 @@
 #include "sys/fcntl.h"
 #include "stdlib.h"
 #include "math.h"
+
 
 // Signal used to communicate with console
 #define SIGNAL_STOP_CONSOLE SIGRTMIN+1
