@@ -210,8 +210,9 @@ void read_file_from_console_path(){
     }
     // Works only on unix system
     char buff [100];
-    sprintf(buff, "Specified path is correct. Path: \\e[3 ] %s \\e[0m", path_to_file.c_str());
+    sprintf(buff, "Specified path is correct. Path: %s ", path_to_file.c_str());
     write_to_console(buff);
+    is_file_trajectory_load = true; // set global atomic flag to true
 }
 
 /*

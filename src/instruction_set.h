@@ -68,7 +68,7 @@ struct TrajectoryInstruction
 };
 
 //Limit for instructions in buffer
-#define MAX_INSTRUCTION_PER_TRAJECTORY 128
+#define MAX_INSTRUCTION_PER_TRAJECTORY 256
 // Global instruction buffer
 extern TrajectoryInstruction trajectory_instruction_buffer[MAX_INSTRUCTION_PER_TRAJECTORY];
 // mutex for trajectory instruction buffer

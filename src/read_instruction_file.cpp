@@ -166,8 +166,6 @@ int  read_instruction_from_file(std::string _file_name, TrajectoryInstruction *_
     // copy temp buffer to input buffer
     memcpy(_input_buffer, buffer, sizeof(buffer));
 
-    // Write to console
-    printf("File load successful");
     // If everything is complete without errors
     return 0;
 }
