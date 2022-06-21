@@ -47,8 +47,8 @@ int generate_fine_trajectory(robot_joint_position_t _next_position, robot_joint_
         new_manipulator_cartesian_pos.y = (1-u) * curr_manipulator_cartesian_pos.y + u * sp_manipulator_cartesian_pos.y;
         new_manipulator_cartesian_pos.z = (1-u) * curr_manipulator_cartesian_pos.z + u * sp_manipulator_cartesian_pos.z;
         // solve inverse robot kinematic
-        calculate_inverse_robot_kinematics(new_manipulator_cartesian_pos, fine_pos);
-
+        if (calculate_inverse_robot_kinematics(new_manipulator_cartesian_pos, fine_pos) != 0)
+            return ARM_POSITION_UNREACHABLE;
     }else{
         memcpy(fine_pos, _setpoint, sizeof(fine_pos));
     }

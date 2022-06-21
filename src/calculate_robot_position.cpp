@@ -12,7 +12,7 @@
  * calculated_joint_position - requested of manipulator position in joint position
  * Replace this function for the kinematics of your robot
  */
-void calculate_inverse_robot_kinematics(Manipulator_position cartesian_position,
+int calculate_inverse_robot_kinematics(Manipulator_position cartesian_position,
                                         robot_joint_position_t calculated_joint_position){
     // extract the setpoint manipulator position in cartesian system
     float setpoint_x =  cartesian_position.x;
@@ -38,10 +38,19 @@ void calculate_inverse_robot_kinematics(Manipulator_position cartesian_position,
     angle_2 = angle_2 * 180 / M_PI;
     angle_3 = angle_3 * 180 / M_PI;
 
+    // Check error in calculated values
+    if (angle_1 == NAN or angle_1 == INFINITY)
+        return -1;
+    if (angle_2 == NAN or angle_2 == INFINITY)
+        return -1;
+    if (angle_3 == NAN or angle_3 == INFINITY)
+        return -1;
+
     // save the calculated values to output array
     calculated_joint_position[0] = angle_1;
     calculated_joint_position[1] = angle_2;
     calculated_joint_position[2] = angle_3;
+    return 0;
 }
 
 /*

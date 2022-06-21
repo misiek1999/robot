@@ -13,7 +13,7 @@
  * Function to calculate inverse robot kinematic of given robot
  * Depending on the robot configuration used, change the function code
  */
-void calculate_inverse_robot_kinematics(Manipulator_position cartesian_position,
+int calculate_inverse_robot_kinematics(Manipulator_position cartesian_position,
                                         robot_joint_position_t calculated_joint_position);
 
 /*

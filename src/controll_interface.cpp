@@ -70,11 +70,14 @@ void initialize_robot_communication(){
     socket_udp_control_receive_addr.sin_port = htons(UDP_CONTROL_PORT_RECEIVE); // set udp port
     socket_udp_control_receive_addr.sin_addr.s_addr = INADDR_ANY;   // bind to all address
 
-    // set 1sec timeout for receive
-    struct timeval timeout;
-    timeout.tv_sec = 1;
-    timeout.tv_usec = 0;
-    setsockopt(control_socket_receive, SOL_SOCKET, SO_RCVTIMEO,  (const char*)&timeout, sizeof(timeout));
+    // Disable timeout receive socket on Cygwin compiler
+    #ifndef __CYGWIN__
+        // set 1sec timeout for receive
+        struct timeval timeout;
+        timeout.tv_sec = 1;
+        timeout.tv_usec = 0;
+        setsockopt(control_socket_receive, SOL_SOCKET, SO_RCVTIMEO,  (const char*)&timeout, sizeof(timeout));
+    #endif
     addr_length_receive = sizeof(server_addr);
 
     // Bind socket to socket address struct
