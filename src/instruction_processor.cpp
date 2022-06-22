@@ -76,12 +76,19 @@ bool fine_instruction(InstructionData _data) {
     }else{
         position_unreachable_alarm();
     }
+
+    // calculate manipulator position
     Manipulator_position man_pos;
-    // Check it is final manipulator destination
     calculate_simple_robot_kinematics(man_pos, new_position);
-    if (man_pos.x == requied_position[0] and man_pos.y == requied_position[1] and man_pos.z == requied_position[2])
-        return true;
-    return false;
+    // check destination position
+    if(abs(man_pos.x -  requied_position.x) > ROBOT_JOINT_POSITION_TOLERANCE)
+        return false;
+    if(abs(man_pos.y -  requied_position.y) > ROBOT_JOINT_POSITION_TOLERANCE)
+        return false;
+    if(abs(man_pos.z -  requied_position.z) > ROBOT_JOINT_POSITION_TOLERANCE)
+        return false;
+
+    return true;
 }
 
 void write_digital_instruction(InstructionData _data){
