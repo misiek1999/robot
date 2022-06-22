@@ -29,6 +29,9 @@
 // global state of loading trajectory from file
 extern std::atomic<bool> is_file_trajectory_load;
 
+// global trajectory generation mask
+extern sigset_t trajectory_mask;
+
 /*
  * Enum include two state of robot trajectory generator
  * 0 - Undefined

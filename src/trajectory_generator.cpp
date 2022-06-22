@@ -14,6 +14,9 @@ std::atomic<bool> is_file_trajectory_load;
 // global atomic enum with trajectory generator mode
 std::atomic<Trajectory_control_type>  robot_trajectory_mode;
 
+// global trajectory generation mask
+sigset_t trajectory_mask;
+
 // Message queue for data from console to trajectory generator
 mqd_t	mes_to_trajectory_queue;
 struct	mq_attr mes_to_trajectory_queue_attr;
@@ -111,8 +114,7 @@ void* generate_trajectory(void *pVoid){
     // set cancel mode in this thread
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,nullptr);
 
-    // set handler for wake up singal in trajecotry generator mode 
-    sigset_t trajectory_mask;
+    // set handler for wake up singal in trajecotry generator mode
     sigfillset(&trajectory_mask);
     sigdelset(&trajectory_mask, SIGNAL_WAKE_UP_TRAJECTORY_THREAD); //Allow woke up signal to trajectory generator thread
     pthread_sigmask(SIG_SETMASK, &trajectory_mask, NULL); // Add signals to trajectory_mask
