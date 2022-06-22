@@ -115,12 +115,14 @@ void receive_robot_position_packet(){
         memcpy(current_robot_position, received_packet.received_position, sizeof(received_packet.received_position));
         // unlock robot current joint position mutex
         current_robot_position_mutex.unlock();
-        // check is set point position is reached
-        bool current_position_status = is_position_reached();
-        // if set point position is reached then send wake up signal to trajectory thread
-        if(current_position_status == true and position_reached_previous == false)
-            kill(getpid(), SIGNAL_WAKE_UP_TRAJECTORY_THREAD);   // send signal to your own process
-        position_reached_previous = current_position_status; // save current status to previous
+        if(robot_trajectory_mode == Trajectory_control_type::AUTO){
+            // check is set point position is reached
+            bool current_position_status = is_position_reached();
+            // if set point position is reached then send wake up signal to trajectory thread
+            if(current_position_status == true and position_reached_previous == false)
+                kill(getpid(), SIGNAL_WAKE_UP_TRAJECTORY_THREAD);   // send signal to your own process
+            position_reached_previous = current_position_status; // save current status to previous
+        }
     }
 //    else  // debug print
 //        std::cerr<<"rec: "<<status<<" -> "<< strerror(errno) <<std::endl;
