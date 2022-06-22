@@ -3,6 +3,9 @@
 //
 #include "instruction_processor.h"
 
+// Global static bool variable with new isntruction information
+bool new_position_selected; 
+
 // Global instruction buffer
 TrajectoryInstruction trajectory_instruction_buffer[MAX_INSTRUCTION_PER_TRAJECTORY];
 // mutex for trajectory instruction buffer
@@ -211,8 +214,12 @@ void execute_instructions(){
 
         // If selected instruction is go_ptp or fine, suspend thread until reach set point position
         if (instruction == Trajectory_instruction_set::FINE or instruction == Trajectory_instruction_set::GO_PTP){
+            // enable flag with new position selected
+            new_position_selected = true;
             // handle wake up signal in this thread
             sigsuspend(&trajectory_mask);
+            // disable flag with new position selected
+            new_position_selected = false;
         }
     }
 }

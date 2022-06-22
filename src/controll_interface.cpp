@@ -27,9 +27,6 @@ timer_t	timer_to_control;
 /* Signal variable */
 struct sigevent timer_control_signal;
 
-// static variable with previous position reached status
-static bool position_reached_previous;
-
 // Robot position & coresponding mutex's
 robot_joint_position_t setpoint_robot_position;
 robot_joint_position_t current_robot_position;
@@ -119,9 +116,8 @@ void receive_robot_position_packet(){
             // check is set point position is reached
             bool current_position_status = is_position_reached();
             // if set point position is reached then send wake up signal to trajectory thread
-            if(current_position_status == true and position_reached_previous == false)
+            if(current_position_status == true and new_position_selected == true)
                 kill(getpid(), SIGNAL_WAKE_UP_TRAJECTORY_THREAD);   // send signal to your own process
-            position_reached_previous = current_position_status; // save current status to previous
         }
     }
 //    else  // debug print
@@ -197,9 +193,6 @@ void* communicate_with_robot(void* _arg_input) {
 
     /* Change timer parameters and run */
     timer_settime( timer_to_control, 0, &timer_control_spec, NULL);
-
-    // set static variable with previous position reach status
-    position_reached_previous = true;   // default value of position reach status is true
 
     // Enter to infinite loop until close program to receive packet with timeout 1s
     while(get_program_state() != ProgramState::CLOSE_PROGRAM){  //stop if program is shutdown
