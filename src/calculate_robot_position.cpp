@@ -22,16 +22,13 @@ int calculate_inverse_robot_kinematics(Manipulator_position cartesian_position,
     // Calculate position to first joint
     float angle_1 = atan2(setpoint_y, setpoint_x);
 
-    // Calculate position to last joint
-    float L = pow(setpoint_z - ARM_1_LENGTH,2) + pow(setpoint_x,2) +  pow(setpoint_y,2) - pow(ARM_2_LENGTH,2) -  pow(ARM_3_LENGTH,2);
-    L = L /(2 * ARM_2_LENGTH * ARM_3_LENGTH);
-    float temp_numinator = sqrt(1 - L*L);
-    float angle_3 = atan2(temp_numinator, L);
+    float ex = setpoint_x / cos(angle_1);
+    float ez = setpoint_z - ARM_1_LENGTH;
 
-    // Calculate position to second joint
-    float beta = atan2(setpoint_z - ARM_1_LENGTH, sqrt(setpoint_y * setpoint_y + setpoint_x * setpoint_x));
-    float theta = atan2(ARM_3_LENGTH*sin(angle_3),ARM_2_LENGTH + ARM_3_LENGTH*cos(angle_3));
-    float angle_2 = beta + theta;
+    float angle_3 = acos((ex*ex + ez*ez - ARM_1_LENGTH*ARM_1_LENGTH - ARM_2_LENGTH*ARM_2_LENGTH)
+            /(2*ARM_1_LENGTH * ARM_2_LENGTH));
+    float angle_2 = atan2(ez, ex) - atan2(ARM_3_LENGTH * sin(angle_3), ARM_1_LENGTH + ARM_2_LENGTH
+    * cos(angle_3));
 
     // convert rad to deg
     angle_1 = angle_1 * 180 / M_PI;
@@ -57,7 +54,7 @@ int calculate_inverse_robot_kinematics(Manipulator_position cartesian_position,
  * Function to calculate simple robot kinematic of given robot
  * Depending on the robot configuration used, change the function code
  */
-void calculate_simple_robot_kinematics(Manipulator_position cartesian_position,
+void calculate_simple_robot_kinematics(Manipulator_position &cartesian_position,
                                        robot_joint_position_t joint_position){
     // read robot joint position
     float joint_1_angle = joint_position[0];
