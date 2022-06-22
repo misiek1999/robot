@@ -54,7 +54,10 @@ void go_ptp_instruction(InstructionData _data){
     }
 }
 
-void fine_instruction(InstructionData _data) {
+/*
+ * If final position is reached then return true, otherwise return false
+ */
+bool fine_instruction(InstructionData _data) {
     robot_joint_position_t new_position;
     robot_joint_position_t requied_position;
     // set new setpoint value for each joint
@@ -62,16 +65,23 @@ void fine_instruction(InstructionData _data) {
         requied_position[itr] = _data.fine_data[itr];
     }
     float arm_linear_speed = _data.fine_data[NUMBER_OF_ROBOT_JOINT];
+
     // Find next point to reach in fine trajectory generator mode
     generate_fine_trajectory(new_position, requied_position, arm_linear_speed);
 
-    // check limits
+    // check joint limits
     if (check_joint_limit(new_position)) {
         // Set new position to reach
         write_setpoint_robot_position(new_position);
     }else{
         position_unreachable_alarm();
     }
+    Manipulator_position man_pos;
+    // Check it is final manipulator destination
+    calculate_simple_robot_kinematics(man_pos, new_position);
+    if (man_pos.x == requied_position[0] and man_pos.y == requied_position[1] and man_pos.z == requied_position[2])
+        return true;
+    return false;
 }
 
 void write_digital_instruction(InstructionData _data){
@@ -157,10 +167,10 @@ void execute_instructions(){
                     stop_auto_instruction_iterator = true;
                 break;
             case Trajectory_instruction_set::FINE:
+                stop_auto_instruction_iterator = true;
                 if (get_program_state() == ProgramState::RUNNING)// stop movement in different program state as RUNNING
-                    fine_instruction(data);
-                else
-                    stop_auto_instruction_iterator = true;
+                    if(fine_instruction(data))
+                        stop_auto_instruction_iterator = false; // If final position is reached then increase instruction
                 break;
             case Trajectory_instruction_set::WRITE_DIGITAL:
                 write_digital_instruction(data);
