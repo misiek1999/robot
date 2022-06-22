@@ -19,8 +19,12 @@
 #include "iostream"
 #include "errno.h"
 #include "string.h"
+#include "signal.h"
 #include "controll_interface.h"
 #include "instruction_processor.h"
+
+// Signal used to wake up trajectory generator thread after fine or go_ptp suspend
+#define SIGNAL_WAKE_UP_TRAJECTORY_THREAD SIGRTMIN+3
 
 // global state of loading trajectory from file
 extern std::atomic<bool> is_file_trajectory_load;

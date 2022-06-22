@@ -23,8 +23,8 @@ typedef float robot_joint_position_t [NUMBER_OF_ROBOT_JOINT]; //Joint position a
 // Array with min and max value for each joint
 const float ROBOT_JOINT_LIMIT_ARRAY[NUMBER_OF_ROBOT_JOINT][2] =
         {{-90, 90}, {-90, 90}, {-90, 90}};
-typedef std::uint8_t robot_digital_data_type;                    // Robot universal input/output digital data type
-typedef std::atomic <robot_digital_data_type> robot_binary_interface_t; // Atomic robot digital interface
+typedef std::uint8_t robot_digital_data_t;                    // Robot universal input/output digital data type
+typedef std::atomic <robot_digital_data_t> robot_binary_interface_t; // Atomic robot digital interface
 // First joint
 #define ARM_1_LENGTH 12.0f          // Length of first arm of robot [cm]
 #define MOTOR_SPEED_DEG 2.83f     // Speed of first motor [ms/deg]

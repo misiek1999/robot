@@ -75,6 +75,7 @@ void * program_supervisor(void *pVoid){
     sigemptyset(&supervisor_mask);
     sigaddset(&supervisor_mask, SIGNAL_STOP_CONSOLE); // Block stop signal to console
     sigaddset(&supervisor_mask, SIGNAL_EMERGENCY_STOP_CONSOLE); // Block emergency stop signal to console
+    sigaddset(&supervisor_mask, SIGNAL_WAKE_UP_TRAJECTORY_THREAD); // Block woke up signal to trajectory generator thread
     pthread_sigmask(SIG_SETMASK, &supervisor_mask, NULL); // Add signals to supervisor_mask
 
     // Prepare signal action struct for function handler

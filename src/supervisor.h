@@ -11,6 +11,7 @@
 #include "iostream"
 #include "logger.h"
 #include "console_interface.h"
+#include "trajectory_generator.h"
 // External close signal
 #define EXTERNAL_CLOSE_PROGRAM SIGINT
 // Interprocess close signal

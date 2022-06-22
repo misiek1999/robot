@@ -26,6 +26,7 @@
 #include "arpa/inet.h"
 #include "logger.h"
 #include "console_interface.h"
+#include "trajectory_generator.h"
 #include "signal.h"
 
 // period of time between communication with the robot [ms]
@@ -42,6 +43,7 @@ struct PacketToSend{
     robot_joint_position_t setpoint_position;           // Current robot position in each joint
     robot_binary_interface_t send_digital_signals;      // Sended robot digital signals
 };
+
 // Data which is received from robot
 struct PacketToReceive{
     robot_joint_position_t received_position;           // Setpoint robot position in each joint
@@ -55,14 +57,19 @@ struct PacketToReceive{
  * function use UDP protocol to communicate with robot/simulator
  */
 void* communicate_with_robot(void* _arg_input);
+
 // Write digital output to robot
-void set_digital_output(const robot_digital_data_type _input);
+void set_digital_output(const robot_digital_data_t _input);
+
 // get digital output
-robot_digital_data_type get_digital_output();
+robot_digital_data_t get_digital_output();
+
 // read robot current joint position
 void get_current_robot_position(robot_joint_position_t _current_position);
+
 // write robot setpoint joint position
 void write_setpoint_robot_position(const robot_joint_position_t _setpoint_position);
+
 // get robot setpoint position
 void get_setpoint_robot_position(robot_joint_position_t _setpoint_position);
 

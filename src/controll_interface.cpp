@@ -27,6 +27,9 @@ timer_t	timer_to_control;
 /* Signal variable */
 struct sigevent timer_control_signal;
 
+// static variable with previous position reached status
+static bool position_reached_previous;
+
 // Robot position & coresponding mutex's
 robot_joint_position_t setpoint_robot_position;
 robot_joint_position_t current_robot_position;
@@ -103,7 +106,7 @@ void receive_robot_position_packet(){
     // check is message is received property
     if (status >= 0){
         // create variable for current position and digital input
-        robot_digital_data_type digit_in;
+        robot_digital_data_t digit_in;
         digit_in = received_packet.received_digital_signals;
         robot_output_binary = digit_in; //atomic variable
         // lock robot current joint position mutex
@@ -112,8 +115,14 @@ void receive_robot_position_packet(){
         memcpy(current_robot_position, received_packet.received_position, sizeof(received_packet.received_position));
         // unlock robot current joint position mutex
         current_robot_position_mutex.unlock();
+        // check is set point position is reached
+        bool current_position_status = is_position_reached();
+        // if set point position is reached then send wake up signal to trajectory thread
+        if(current_position_status == true and position_reached_previous == false)
+            kill(getpid(), SIGNAL_WAKE_UP_TRAJECTORY_THREAD);   // send signal to your own process
+        position_reached_previous = current_position_status; // save current status to previous
     }
-//    else
+//    else  // debug print
 //        std::cerr<<"rec: "<<status<<" -> "<< strerror(errno) <<std::endl;
 }
 
@@ -130,7 +139,7 @@ void send_robot_position_packet(){
     PacketToSend packet_to_send;
     // create variable for setpoint position and digital output
     robot_joint_position_t set_pos_out;
-    robot_digital_data_type digit_out;
+    robot_digital_data_t digit_out;
     // read setpoint joint position and digital output
     get_setpoint_robot_position(packet_to_send.setpoint_position);
     digit_out = robot_input_binary;
@@ -144,7 +153,7 @@ void send_robot_position_packet(){
     }
 }
 
-// Write and read robot position and controll signal;
+// Write and read robot position and control signal;
 void* communicate_with_robot(void* _arg_input) {
     // Change thread priority
     // Init thread priority
@@ -187,6 +196,9 @@ void* communicate_with_robot(void* _arg_input) {
     /* Change timer parameters and run */
     timer_settime( timer_to_control, 0, &timer_control_spec, NULL);
 
+    // set static variable with previous position reach status
+    position_reached_previous = true;   // default value of position reach status is true
+
     // Enter to infinite loop until close program to receive packet with timeout 1s
     while(get_program_state() != ProgramState::CLOSE_PROGRAM){  //stop if program is shutdown
         receive_robot_position_packet();    // Try to receive udp packet with 1s timeout
@@ -201,13 +213,13 @@ void* communicate_with_robot(void* _arg_input) {
 }
 
 // Function to write digital output in robot
-void set_digital_output(const robot_digital_data_type _input){
+void set_digital_output(const robot_digital_data_t _input){
     // Change digital output with xor current robot digital output with input
     robot_input_binary = (_input ^ robot_input_binary);
 }
 
 // get digital output
-robot_digital_data_type get_digital_output(){
+robot_digital_data_t get_digital_output(){
     return robot_output_binary;
 }
 

@@ -41,7 +41,7 @@ enum class Trajectory_instruction_set{
  * Struct for if instruction data
  */
 struct IfInstructionDataType{
-    robot_digital_data_type data_to_compare;
+    robot_digital_data_t data_to_compare;
     InstructionIteratorType address_to_jump;
 };
 /*

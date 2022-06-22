@@ -75,7 +75,7 @@ void fine_instruction(InstructionData _data) {
 }
 
 void write_digital_instruction(InstructionData _data){
-    robot_digital_data_type digital_out;
+    robot_digital_data_t digital_out;
     // get digital out from data
     digital_out = _data.digital_data;
     // write digital output
@@ -83,11 +83,11 @@ void write_digital_instruction(InstructionData _data){
 }
 
 void if_instruction(InstructionData _data, InstructionIteratorType &instr_numb, bool &jump_flag){
-    robot_digital_data_type digital_input;
+    robot_digital_data_t digital_input;
     // get digital input from robot
     digital_input = get_digital_output();
     // read data to compare
-    robot_digital_data_type data_to_compare;
+    robot_digital_data_t data_to_compare;
     data_to_compare = _data.if_data.data_to_compare;
     // Compare data
     if (digital_input == data_to_compare){  // if data are correct then jump
@@ -136,7 +136,7 @@ void execute_instructions(){
     ProgramState current_state = get_program_state();
     if (current_state == ProgramState::RUNNING || current_state == ProgramState::STOP) {
         /* bool variable to detect jump */
-        bool stop_auto_instruction_iterator_increase = false;
+        bool stop_auto_instruction_iterator = false;
 
         // Read current instruction and data
         trajectory_instruction_buffer_mutex.lock();
@@ -145,63 +145,61 @@ void execute_instructions(){
         Trajectory_instruction_set instruction = curr_instr_set.instruction;
         InstructionData data = curr_instr_set.data;
 
-        // Continue only if setpoint position is reached
-        if (is_position_reached()) {
-            // Select and execute instruction
-            switch (instruction) {
-                case Trajectory_instruction_set::UNDEFINED:
-                    undefined_instruction_stop();
-                    break;
-                case Trajectory_instruction_set::GO_PTP:
-                    if (get_program_state() == ProgramState::RUNNING)// stop movement in different program state as RUNNING
-                        go_ptp_instruction(data);
-                    else
-                        stop_auto_instruction_iterator_increase = true;
-                    break;
-                case Trajectory_instruction_set::FINE:
-                    if (get_program_state() == ProgramState::RUNNING)// stop movement in different program state as RUNNING
-                        fine_instruction(data);
-                    else
-                        stop_auto_instruction_iterator_increase = true;
-                    break;
-                    break;
-                case Trajectory_instruction_set::WRITE_DIGITAL:
-                    write_digital_instruction(data);
-                    break;
-                case Trajectory_instruction_set::IF:
-                    if_instruction(data, instruction_number_iterator, stop_auto_instruction_iterator_increase);
-                    break;
-                case Trajectory_instruction_set::JUMP:
-                    jump_instruction(data, instruction_number_iterator, stop_auto_instruction_iterator_increase);
-                    break;
-                case Trajectory_instruction_set::WAIT:
-                    wait_instruction(data);
-                    break;
-                case Trajectory_instruction_set::STOP:
-                    stop_instruction();
-                    break;
-                case Trajectory_instruction_set::EXIT:
-                    exit_instruction();
-                    break;
-                case Trajectory_instruction_set::RESUME:
-                    resume_instruction();
-                    break;
-                default:
-                    undefined_instruction_stop();
-                    break;
-            }
-
-            // If jump instruction was not executed then increase instruction number by 1
-            if (!stop_auto_instruction_iterator_increase)
-                ++instruction_number_iterator;
-        }
-        // If position is not reached, but current instruction is fine movement
-        else{
-            if (instruction == Trajectory_instruction_set::FINE) {
+        // Select and execute instruction
+        switch (instruction) {
+            case Trajectory_instruction_set::UNDEFINED:
+                undefined_instruction_stop();
+                break;
+            case Trajectory_instruction_set::GO_PTP:
+                if (get_program_state() == ProgramState::RUNNING)// stop movement in different program state as RUNNING
+                    go_ptp_instruction(data);
+                else
+                    stop_auto_instruction_iterator = true;
+                break;
+            case Trajectory_instruction_set::FINE:
                 if (get_program_state() == ProgramState::RUNNING)// stop movement in different program state as RUNNING
                     fine_instruction(data);
-            }
+                else
+                    stop_auto_instruction_iterator = true;
+                break;
+            case Trajectory_instruction_set::WRITE_DIGITAL:
+                write_digital_instruction(data);
+                break;
+            case Trajectory_instruction_set::IF:
+                if_instruction(data, instruction_number_iterator, stop_auto_instruction_iterator);
+                break;
+            case Trajectory_instruction_set::JUMP:
+                jump_instruction(data, instruction_number_iterator, stop_auto_instruction_iterator);
+                break;
+            case Trajectory_instruction_set::WAIT:
+                wait_instruction(data);
+                break;
+            case Trajectory_instruction_set::STOP:
+                stop_instruction();
+                break;
+            case Trajectory_instruction_set::EXIT:
+                exit_instruction();
+                break;
+            case Trajectory_instruction_set::RESUME:
+                resume_instruction();
+                break;
+            default:
+                undefined_instruction_stop();
+                break;
+        }
 
+        // If jump instruction was not executed then increase instruction number by 1
+        if (!stop_auto_instruction_iterator)
+            ++instruction_number_iterator;
+
+        // If selected instruction is go_ptp or fine, suspend thread until reach set point position
+        if (instruction == Trajectory_instruction_set::FINE or instruction == Trajectory_instruction_set::GO_PTP){
+            // handle wake up signal in this thread
+            sigset_t trajectory_mask;
+            sigfillset(&trajectory_mask);
+            sigdelset(&trajectory_mask, SIGNAL_WAKE_UP_TRAJECTORY_THREAD); //Allow woke up signal to trajectory generator thread
+            pthread_sigmask(SIG_SETMASK, &trajectory_mask, NULL); // Add signals to trajectory_mask
+            sigsuspend(&trajectory_mask);
         }
     }
 }
