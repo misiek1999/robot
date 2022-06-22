@@ -83,15 +83,9 @@ bool fine_instruction(InstructionData _data) {
     // calculate manipulator position
     Manipulator_position man_pos;
     calculate_simple_robot_kinematics(man_pos, new_position);
-    // check destination position
-    if(abs(man_pos.x -  requied_position.x) > ROBOT_JOINT_POSITION_TOLERANCE)
-        return false;
-    if(abs(man_pos.y -  requied_position.y) > ROBOT_JOINT_POSITION_TOLERANCE)
-        return false;
-    if(abs(man_pos.z -  requied_position.z) > ROBOT_JOINT_POSITION_TOLERANCE)
-        return false;
 
-    return true;
+    // return status of manipulator position with tolerance
+    return check_manipulator_position_tolerance(man_pos, requied_position);
 }
 
 void write_digital_instruction(InstructionData _data){
