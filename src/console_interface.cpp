@@ -111,6 +111,7 @@ void read_control_from_console(){
             set_program_state(ProgramState::CLOSE_PROGRAM);  // Close program after press 'q'
             break;
         case 't':
+            set_program_state(ProgramState::STOP);
             stop_robot_movement(); // Stop program after press 't'
             break;
         case 'q':
@@ -263,7 +264,7 @@ void console_read_initialization(){
  * Wait for console input in emergency stop mode
  */
 static void console_emergency_stop_handler(int input_signal){
-    write_to_console("Press 'c' to close program.");
+    write_to_console("Emergency stop detected!\r\nPress 'c' to close program.");
     char c;
     bool symbol_detected = false;
     while(!symbol_detected){

@@ -16,8 +16,6 @@ void stop_robot_movement(){
     get_current_robot_position(curr_pos);
     // lock robot at current position
     write_setpoint_robot_position(curr_pos);
-    // send stop signal to rad console thead
-    kill(getpid(), SIGNAL_STOP_CONSOLE);
 }
 
 // Function to close program when closing signal was detected
@@ -31,19 +29,21 @@ static void exit_handler(int input_signal){
 
 // Function to close program when interprocess signal was detected
 static void interprocess_exit_handler(int input_signal){
-    // Function to stop sigsuspend loop in supervisor thread
+    // Function to stop sigsuspend in supervisor thread
 }
 
 // Function for signal handler
 static void emergency_stop_handler(int input_signal){
     // stop robot movement
-    stop_robot_movement();
     set_program_state(ProgramState::EMERGENCY_STOP);
+    // read current robot position
+    robot_joint_position_t curr_pos;
+    get_current_robot_position(curr_pos);
+    // lock robot at current position
+    write_setpoint_robot_position(curr_pos);
     // Send message to log and console
-    write_to_console("Emergency stop detected!");
-    write_to_log("Emergency stop detected!");
-    // send emergency stop signal to console read thread
-    kill(getpid(), SIGNAL_EMERGENCY_STOP_CONSOLE);
+    write_to_console("External emergency stop detected!");
+    write_to_log("External emergency stop detected!");
 }
 
 // Get program state
@@ -56,7 +56,11 @@ void set_program_state(const ProgramState _state_to_set){
     program_state = _state_to_set;
     // Check if selected state is CLOSE_PROGRAM
     if (program_state == ProgramState::CLOSE_PROGRAM)
-        kill(getpid(), INTERPOCESS_CLOSE_PROGRAM_SIGNAL);    // send interprocess signal to stop supervisor thread
+        kill(getpid(), INTERPOCESS_CLOSE_PROGRAM_SIGNAL);   // send interprocess signal to stop supervisor thread
+    if (program_state == ProgramState::EMERGENCY_STOP)
+        kill(getpid(), SIGNAL_EMERGENCY_STOP_CONSOLE);      // send emergency stop signal to console thread
+    if (program_state == ProgramState::STOP)
+        kill(getpid(), SIGNAL_STOP_CONSOLE);                // send stop signal to rad console thead
 }
 
 // Supervisor thread function
