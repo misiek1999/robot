@@ -59,12 +59,12 @@ void go_ptp_instruction(InstructionData _data){
  */
 bool fine_instruction(InstructionData _data) {
     robot_joint_position_t new_position;
-    robot_joint_position_t requied_position;
-    // set new setpoint value for each joint
-    for (size_t itr = 0; itr < NUMBER_OF_ROBOT_JOINT; ++itr){
-        requied_position[itr] = _data.fine_data[itr];
-    }
-    float arm_linear_speed = _data.fine_data[NUMBER_OF_ROBOT_JOINT];
+    Manipulator_position requied_position;
+    // set new set point value for each joint
+    requied_position.x = _data.fine_data[0];
+    requied_position.y = _data.fine_data[1];
+    requied_position.z = _data.fine_data[2];
+    float arm_linear_speed = _data.fine_data[3];
 
     // Find next point to reach in fine trajectory generator mode
     generate_fine_trajectory(new_position, requied_position, arm_linear_speed);

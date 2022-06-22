@@ -15,7 +15,7 @@
  * Return 0 if trajectory was created successful
  * If returned value is higher than 0 check error code table in fine_trajectory.cpp
  */
-int generate_fine_trajectory(robot_joint_position_t _next_position, robot_joint_position_t _setpoint, float _linear_speed);
+int generate_fine_trajectory(robot_joint_position_t _next_position, Manipulator_position _setpoint, float _linear_speed);
 
 /*
  * Check speed limit in each joint

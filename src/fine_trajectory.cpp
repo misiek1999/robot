@@ -17,7 +17,7 @@
  * Return 0 if trajectory was created successful
  * If returned value is higher than 0 check error code table in fine_trajectory.cpp
  */
-int generate_fine_trajectory(robot_joint_position_t _next_position, robot_joint_position_t _setpoint, float _linear_speed){
+int generate_fine_trajectory(robot_joint_position_t _next_position, Manipulator_position _setpoint, float _linear_speed){
     // read current robot joint position
     robot_joint_position_t curr_pos;
     get_current_robot_position(curr_pos);
@@ -27,30 +27,31 @@ int generate_fine_trajectory(robot_joint_position_t _next_position, robot_joint_
     Manipulator_position new_manipulator_cartesian_pos;
     // change joint position to manipulator position in cartesian system
     calculate_simple_robot_kinematics(curr_manipulator_cartesian_pos, curr_pos);
-    calculate_simple_robot_kinematics(sp_manipulator_cartesian_pos, _setpoint);
 
     // find next point between setpoint and current manipulator position in cartesian system with given speed
     robot_joint_position_t fine_pos;
 
     // linear distance between setpoint and current point [cm]
     float dist = 0;
-    dist += pow(sp_manipulator_cartesian_pos.x - curr_manipulator_cartesian_pos.x, 2);
-    dist += pow(sp_manipulator_cartesian_pos.y - curr_manipulator_cartesian_pos.y, 2);
-    dist += pow(sp_manipulator_cartesian_pos.z - curr_manipulator_cartesian_pos.z, 2);
+    dist += pow(_setpoint.x - curr_manipulator_cartesian_pos.x, 2);
+    dist += pow(_setpoint.y - curr_manipulator_cartesian_pos.y, 2);
+    dist += pow(_setpoint.z - curr_manipulator_cartesian_pos.z, 2);
     dist = sqrt(dist);
     // calculate the displacement factor
-    float u = _linear_speed / dist;
+    float u = _linear_speed *CONTROL_TIME_PERIOD / 1000 / dist;
     // if u factor is higher than 1 then move manipulator directly to setpoint position
     if(u < 1){
         // find next point to reach to generate fine trajectory
-        new_manipulator_cartesian_pos.x = (1-u) * curr_manipulator_cartesian_pos.x + u * sp_manipulator_cartesian_pos.x;
-        new_manipulator_cartesian_pos.y = (1-u) * curr_manipulator_cartesian_pos.y + u * sp_manipulator_cartesian_pos.y;
-        new_manipulator_cartesian_pos.z = (1-u) * curr_manipulator_cartesian_pos.z + u * sp_manipulator_cartesian_pos.z;
+        new_manipulator_cartesian_pos.x = (1-u) * curr_manipulator_cartesian_pos.x + u * _setpoint.x;
+        new_manipulator_cartesian_pos.y = (1-u) * curr_manipulator_cartesian_pos.y + u * _setpoint.y;
+        new_manipulator_cartesian_pos.z = (1-u) * curr_manipulator_cartesian_pos.z + u * _setpoint.z;
         // solve inverse robot kinematic
         if (calculate_inverse_robot_kinematics(new_manipulator_cartesian_pos, fine_pos) != 0)
             return ARM_POSITION_UNREACHABLE;
     }else{
-        memcpy(fine_pos, _setpoint, sizeof(fine_pos));
+        // solve inverse robot kinematic
+        if (calculate_inverse_robot_kinematics(_setpoint, fine_pos) != 0)
+            return ARM_POSITION_UNREACHABLE;
     }
 
     // check limits and overrun in calculated trajectory
