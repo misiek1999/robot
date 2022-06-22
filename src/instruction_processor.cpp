@@ -205,10 +205,6 @@ void execute_instructions(){
         // If selected instruction is go_ptp or fine, suspend thread until reach set point position
         if (instruction == Trajectory_instruction_set::FINE or instruction == Trajectory_instruction_set::GO_PTP){
             // handle wake up signal in this thread
-            sigset_t trajectory_mask;
-            sigfillset(&trajectory_mask);
-            sigdelset(&trajectory_mask, SIGNAL_WAKE_UP_TRAJECTORY_THREAD); //Allow woke up signal to trajectory generator thread
-            pthread_sigmask(SIG_SETMASK, &trajectory_mask, NULL); // Add signals to trajectory_mask
             sigsuspend(&trajectory_mask);
         }
     }

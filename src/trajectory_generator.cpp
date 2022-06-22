@@ -91,6 +91,10 @@ void auto_control(){
      }
  }
 
+void wake_up_dummy_function(int input_signal){
+    return;
+}
+
 // Function to run trajectory generator in new thread
 void* generate_trajectory(void *pVoid){
      // init variables
@@ -106,6 +110,21 @@ void* generate_trajectory(void *pVoid){
     pthread_setschedparam( pthread_self(), policy, &param);   //set thread priority for this thread to max -3
     // set cancel mode in this thread
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,nullptr);
+
+    // set handler for wake up singal in trajecotry generator mode 
+    sigset_t trajectory_mask;
+    sigfillset(&trajectory_mask);
+    sigdelset(&trajectory_mask, SIGNAL_WAKE_UP_TRAJECTORY_THREAD); //Allow woke up signal to trajectory generator thread
+    pthread_sigmask(SIG_SETMASK, &trajectory_mask, NULL); // Add signals to trajectory_mask
+    //associate dummy function to wake up singal 
+    struct sigaction interprocess_wake_up_action;
+    interprocess_wake_up_action.sa_handler = wake_up_dummy_function;
+    sigemptyset(&interprocess_wake_up_action.sa_mask);
+    interprocess_wake_up_action.sa_flags = 0;
+    if (sigaction(SIGNAL_WAKE_UP_TRAJECTORY_THREAD, &interprocess_wake_up_action, NULL) < 0) {
+        std::cerr <<  "Cannot register WAKE UP handler.\n";
+        throw std::runtime_error("cannot register wake up handler");
+    }
 
     // Enter to loop until program close
     while(true){
