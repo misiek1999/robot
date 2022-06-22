@@ -67,10 +67,10 @@ bool fine_instruction(InstructionData _data) {
     float arm_linear_speed = _data.fine_data[3];
 
     // Find next point to reach in fine trajectory generator mode
-    generate_fine_trajectory(new_position, requied_position, arm_linear_speed);
+    int status = generate_fine_trajectory(new_position, requied_position, arm_linear_speed);
 
-    // check joint limits
-    if (check_joint_limit(new_position)) {
+    // check fine generation status 
+    if (status == 0) {
         // Set new position to reach
         write_setpoint_robot_position(new_position);
     }else{

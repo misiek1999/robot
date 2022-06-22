@@ -23,6 +23,20 @@ std::string get_time_in_string(){
     return std::string(time_str);
 };
 
+// try to craete directory to given file
+bool create_directory(const char*file_path){
+    std::error_code err;
+    if (!std::filesystem::create_directories(file_path, err))
+    {
+        if (std::filesystem::exists(file_path))
+        {
+            return true;    // the folder probably already existed
+        }
+        return false;
+    }
+    return true;
+}
+
 //Initialization of data log
 void log_init(){
     // read current date
@@ -30,9 +44,11 @@ void log_init(){
     tm * curr_tm;
     time(&curr_time);
     curr_tm = localtime(&curr_time);//dont use locatime in other threads
-    char file_name[32];
+    char file_name[64];
     // Format string from date
-    strftime(file_name, 32, "log_%H%M_%d%m%Y.log", curr_tm);
+    strftime(file_name, 64, "log/log_%H%M_%d%m%Y.log", curr_tm);
+    if(!create_directory("log"))
+        std::cerr << "Failed to create directory log/"<<std::endl;
     file_log.open(file_name,std::fstream::out);
     file_log<<"Program launched at: "<<get_time_in_string()<<std::endl;
     if (!file_log.is_open())
