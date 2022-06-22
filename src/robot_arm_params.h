@@ -37,5 +37,7 @@ typedef std::atomic <robot_digital_data_t> robot_binary_interface_t; // Atomic r
 
 // Tolerance of error robot joint positions
 #define ROBOT_JOINT_POSITION_TOLERANCE 0.5f
+// Tolerance of error robot manipulator positions
+#define ROBOT_MANIPULATOR_POSITION_TOLERANCE 0.2f
 
 #endif //ROBOT_ROBOT_ARM_PARAMS_H
