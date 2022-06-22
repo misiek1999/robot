@@ -5,16 +5,6 @@
 #include "calculate_robot_position.h"
 
 /*
- *  Check difference between two joint position. Return true if difference is smaller than tolerance
- */
-bool check_joint_position_tolerance(robot_joint_position_t first_pos, robot_joint_position_t second_pos){
-    for (size_t itr = 0; itr < NUMBER_OF_ROBOT_JOINT; ++itr)
-        if (abs(first_pos[itr] - second_pos[itr] ) > ROBOT_JOINT_POSITION_TOLERANCE)
-            return false;
-    return true;
-}
-
-/*
  *  Check difference between two manipulator position. Return true if difference is smaller than tolerance
  */
 bool check_manipulator_position_tolerance(Manipulator_position first_pos, Manipulator_position second_pos){

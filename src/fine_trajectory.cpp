@@ -10,7 +10,6 @@
 #define ARM_POSITION_UNREACHABLE 2
 #define UNDEFINED_ERROR -1
 
-
 /*
  * Interpol linear trajectory between current robot position and setpoint robot position
  * This method uses inverse robot kinematic
