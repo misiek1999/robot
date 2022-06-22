@@ -37,7 +37,6 @@ robot_binary_interface_t robot_input_binary;
 // mutex's
 std::mutex setpoint_robot_position_mutex;
 std::mutex current_robot_position_mutex;
-std::mutex is_manipulator_reach_setpoint_position_mutex;
 
 // Initialize communication with robot or simulator
 void initialize_robot_communication(){
@@ -71,7 +70,7 @@ void initialize_robot_communication(){
     socket_udp_control_receive_addr.sin_addr.s_addr = INADDR_ANY;   // bind to all address
 
     // Disable timeout receive socket on Cygwin compiler
-    #ifndef __CYGWIN__
+    #ifndef __CYGWIN__  // Disable timeout receive socket on Cygwin to prevent error
         // set 1sec timeout for receive
         struct timeval timeout;
         timeout.tv_sec = 1;

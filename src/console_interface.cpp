@@ -30,7 +30,6 @@ void select_trajectory_mode(){
         // read single char from input and reset errors
         if( ! (std::cin >> mode) ) {
             std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\r\n');
             write_to_console("Invalid input. Try again");
         }
         // display a message in case of an incorrect value
