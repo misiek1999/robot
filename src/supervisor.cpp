@@ -4,10 +4,10 @@
 
 #include "supervisor.h"
 
-// Program state variable
+// Program state
 std::atomic <ProgramState> program_state;
 
-// change setpoint position to current position to stop robot movement
+// change set-point position to current position to stop robot movement and change program state to STOP
 void stop_robot_movement(){
     // Change program state to stop
     set_program_state(ProgramState::STOP);
@@ -15,7 +15,7 @@ void stop_robot_movement(){
     robot_joint_position_t curr_pos;
     get_current_robot_position(curr_pos);
     // lock robot at current position
-    write_setpoint_robot_position(curr_pos);
+    set_setpoint_robot_position(curr_pos);
 }
 
 // Function to close program when closing signal was detected
@@ -23,24 +23,24 @@ static void exit_handler(int input_signal){
     // Send message to log and console
     write_to_console("External close signal detected!");
     write_to_log("External close signal detected!");
-    // set close state in program
+    // set close program state s
     set_program_state(ProgramState::CLOSE_PROGRAM);
 }
 
-// Function to close program when interprocess signal was detected
+// Empty function to close program when interprocess signal was detected
 static void interprocess_exit_handler(int input_signal){
     // Function to stop sigsuspend in supervisor thread
 }
 
-// Function for signal handler
+// Function for emergency stop signal
 static void emergency_stop_handler(int input_signal){
-    // stop robot movement
+    // change program state to EMERGENCY STOP
     set_program_state(ProgramState::EMERGENCY_STOP);
     // read current robot position
     robot_joint_position_t curr_pos;
     get_current_robot_position(curr_pos);
     // lock robot at current position
-    write_setpoint_robot_position(curr_pos);
+    set_setpoint_robot_position(curr_pos);
     // Send message to log and console
     write_to_console("External emergency stop detected!");
     write_to_log("External emergency stop detected!");
@@ -54,13 +54,20 @@ const ProgramState get_program_state(){
 // Set program state
 void set_program_state(const ProgramState _state_to_set){
     program_state = _state_to_set;
-    // Check if selected state is CLOSE_PROGRAM
-    if (program_state == ProgramState::CLOSE_PROGRAM)
-        kill(getpid(), INTERPOCESS_CLOSE_PROGRAM_SIGNAL);   // send interprocess signal to stop supervisor thread
-    if (program_state == ProgramState::EMERGENCY_STOP)
-        kill(getpid(), SIGNAL_EMERGENCY_STOP_CONSOLE);      // send emergency stop signal to console thread
-    if (program_state == ProgramState::STOP)
-        kill(getpid(), SIGNAL_STOP_CONSOLE);                // send stop signal to rad console thead
+    // Send interprocess signal to process threads
+    switch (program_state) {
+        case ProgramState::CLOSE_PROGRAM:
+            kill(getpid(), INTERPOCESS_CLOSE_PROGRAM_SIGNAL);   // send interprocess signal to stop supervisor thread
+            break;
+        case ProgramState::EMERGENCY_STOP:
+            kill(getpid(), SIGNAL_EMERGENCY_STOP_CONSOLE);      // send emergency stop signal to console thread
+            break;
+        case ProgramState::STOP:
+            kill(getpid(), SIGNAL_STOP_CONSOLE);                // send stop signal to rad console thead
+            break;
+        default:
+            break;
+    }
 }
 
 // Supervisor thread function
@@ -71,7 +78,7 @@ void * program_supervisor(void *pVoid){
 
     /* Read modify and set new thread priority */
     pthread_getschedparam( pthread_self(), &policy, &param);
-    param.sched_priority = sched_get_priority_max(policy);  // Read minimum value for thread priority
+    param.sched_priority = sched_get_priority_max(policy);  // Read max value for thread priority
     pthread_setschedparam( pthread_self(), policy, &param);   //set maximum thread priority for this thread
 
     // Accept all signals in this thread

@@ -3,8 +3,8 @@
 //
 #include "instruction_processor.h"
 
-// Global static bool variable with new isntruction information
-bool new_position_selected; 
+// Global static bool variable with new instruction information
+std::atomic<bool> new_position_selected;
 
 // Global instruction buffer
 TrajectoryInstruction trajectory_instruction_buffer[MAX_INSTRUCTION_PER_TRAJECTORY];
@@ -12,9 +12,9 @@ TrajectoryInstruction trajectory_instruction_buffer[MAX_INSTRUCTION_PER_TRAJECTO
 std::mutex trajectory_instruction_buffer_mutex;
 
 // program instruction number iterator
-static InstructionIteratorType instruction_number_iterator;   // default value is 0
+static instruction_iterator_t instruction_number_iterator;   // default value is 0
 
-// Alarm function if position is unrechable
+// Alarm function if position is unreachable
 void position_unreachable_alarm(){
     // send communicate to console and logger
     write_to_console("Position unreachable error");
@@ -30,7 +30,6 @@ void position_unreachable_alarm(){
 /*
  * The following functions below execute the command of a given instruction
  */
-
 void undefined_instruction_stop(){
     // Display and save communicate to console and log
     write_to_console("Undefined instruction! Emergency stop.");
@@ -51,10 +50,14 @@ void go_ptp_instruction(InstructionData _data){
     // check limits
     if (check_joint_limit(new_position)) {
         // Set new position to reach
-        write_setpoint_robot_position(new_position);
+        set_setpoint_robot_position(new_position);
     }else{
         position_unreachable_alarm();
     }
+    char buff [40];
+    sprintf(buff, "Go ptp - j1:%.2f, j2:%.2f, j3:%.2f", new_position[0], new_position[1], new_position[2]);
+    write_to_console(buff);
+    write_to_log(buff);
 }
 
 /*
@@ -75,7 +78,7 @@ bool fine_instruction(InstructionData _data) {
     // check fine generation status 
     if (status == 0) {
         // Set new position to reach
-        write_setpoint_robot_position(new_position);
+        set_setpoint_robot_position(new_position);
     }else{
         position_unreachable_alarm();
     }
@@ -84,8 +87,17 @@ bool fine_instruction(InstructionData _data) {
     Manipulator_position man_pos;
     calculate_simple_robot_kinematics(man_pos, new_position);
 
+    // Check position reach status
+    int position_reach_status = check_manipulator_position_tolerance(man_pos, requied_position);
+    // Write to console and log message if position is reached
+    if (position_reach_status == true){
+        char buff [40];
+        sprintf(buff, "Fine trajectory reach: x:%.2f, y:%.2f, z:%.2f", requied_position.x, requied_position.y, requied_position.z);
+        write_to_console(buff);
+        write_to_log(buff);
+    }
     // return status of manipulator position with tolerance
-    return check_manipulator_position_tolerance(man_pos, requied_position);
+    return position_reach_status;
 }
 
 void write_digital_instruction(InstructionData _data){
@@ -94,9 +106,13 @@ void write_digital_instruction(InstructionData _data){
     digital_out = _data.digital_data;
     // write digital output
     set_digital_output(digital_out);
+    char buff [40];
+    sprintf(buff, "Write output: %d", digital_out);
+    write_to_console(buff);
+    write_to_log(buff);
 }
 
-void if_instruction(InstructionData _data, InstructionIteratorType &instr_numb, bool &jump_flag){
+void if_instruction(InstructionData _data, instruction_iterator_t &instr_numb, bool &jump_flag){
     robot_digital_data_t digital_input;
     // get digital input from robot
     digital_input = get_digital_output();
@@ -107,34 +123,54 @@ void if_instruction(InstructionData _data, InstructionIteratorType &instr_numb, 
     if (digital_input == data_to_compare){  // if data are correct then jump
         instr_numb = _data.if_data.address_to_jump;
         jump_flag = true;
+        char buff [40];
+        sprintf(buff, "If true. Jump to: %d", instr_numb);
+        write_to_console(buff);
+        write_to_log(buff);
+    }else
+    {
+        write_to_console("If: false");
+        write_to_log("If: false");
     }
 }
 
-void jump_instruction(InstructionData _data, InstructionIteratorType &instr_numb, bool &jump_flag){
+void jump_instruction(InstructionData _data, instruction_iterator_t &instr_numb, bool &jump_flag){
     instr_numb = _data.if_data.address_to_jump;
     jump_flag = true;
+    char buff [40];
+    sprintf(buff, "Jump to: %d", instr_numb);
+    write_to_console(buff);
+    write_to_log(buff);
 }
 
 void wait_instruction(InstructionData _data){
     unsigned int time_to_sleep;
     time_to_sleep = _data.wait_data;
+    char buff [40];
+    sprintf(buff, "Sleep for: %d", time_to_sleep);
+    write_to_console(buff);
+    write_to_log(buff);
     // Sleep this thread for given time
     std::this_thread::sleep_for(std::chrono::milliseconds(time_to_sleep));
 }
 
 void stop_instruction(){
+    write_to_console("Instruction stop");
+    write_to_log("Instruction stop");
     // Lock robot movement
     stop_robot_movement();
-    // Change program state to stop
-    set_program_state(ProgramState::STOP);
 }
 
 void resume_instruction(){
+    write_to_console("Instruction resume");
+    write_to_log("Instruction resume");
     // Change program state to resume
     set_program_state(ProgramState::RUNNING);
 }
 
 void exit_instruction(){
+    write_to_console("Program end successful");
+    write_to_log("Program end successful");
     // Lock robot movement
     stop_robot_movement();
     // Change program state to close program

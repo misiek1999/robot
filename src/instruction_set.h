@@ -9,13 +9,13 @@
 #include "robot_arm_params.h"
 
 // Instruction number iterator type
-typedef size_t InstructionIteratorType;
+typedef size_t instruction_iterator_t;
 
 /*
  * enum containing the instructions set of the trajectory generator
  * contains the following instructions:
  *  UNDEFINED,--> non specified instruction, means data error
- *  GO_PTP  --> moves the robot arm in joint coordinates [Joint1, Joint2, Joint3] [rad]
+ *  GO_PTP  --> moves the robot arm in joint coordinates [Joint1, Joint2, Joint3] [deg]
  *  FINE,   --> moves the robot arm in Cartesian coordinates at a given speed    [X, Y, Z, SPEED][cm, cm, cm, cm/s]
  *  WRITE_DIGITAL,--> Write digital pin to robot [digital_output]
  *  IF,     --> compare the digital outputs with the given condition, in case of true jump to the given address [digital_read_value, condition, instruction]
@@ -42,7 +42,7 @@ enum class Trajectory_instruction_set{
  */
 struct IfInstructionDataType{
     robot_digital_data_t data_to_compare;
-    InstructionIteratorType address_to_jump;
+    instruction_iterator_t address_to_jump;
 };
 /*
  * Instruction data for each instruction
@@ -52,7 +52,7 @@ union InstructionData{
     float go_ptp_data[3];   //Data used for ptp move, include joint position
     uint8_t digital_data;   // Digital output
     IfInstructionDataType if_data;// Data for if statement
-    InstructionIteratorType jump_data; // Address in jump instruction
+    instruction_iterator_t jump_data; // Address in jump instruction
     unsigned int wait_data; // Time to wait in ms
     uint8_t bytes[16];      // bytes of this union
 };
@@ -73,4 +73,5 @@ struct TrajectoryInstruction
 extern TrajectoryInstruction trajectory_instruction_buffer[MAX_INSTRUCTION_PER_TRAJECTORY];
 // mutex for trajectory instruction buffer
 extern std::mutex trajectory_instruction_buffer_mutex;
+
 #endif //ROBOT_INSTRUCTION_SET_H

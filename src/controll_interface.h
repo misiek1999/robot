@@ -68,7 +68,7 @@ robot_digital_data_t get_digital_output();
 void get_current_robot_position(robot_joint_position_t _current_position);
 
 // write robot setpoint joint position
-void write_setpoint_robot_position(const robot_joint_position_t _setpoint_position);
+void set_setpoint_robot_position(const robot_joint_position_t _setpoint_position);
 
 // get robot setpoint position
 void get_setpoint_robot_position(robot_joint_position_t _setpoint_position);

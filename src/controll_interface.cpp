@@ -5,7 +5,7 @@
 // File include function to communicate with robot or simulator via Internet
 // UDP protocol is used in this implementation
 #include "controll_interface.h"
-// Define posix variables used to communicate with robot using UDP
+// Define port numbers to  communicate with robot using UDP
 #define UDP_CONTROL_PORT_RECEIVE 22222
 #define UDP_CONTROL_PORT_SEND 22223
 
@@ -20,14 +20,14 @@ int control_socket_receive; //socket for udp communication
 socklen_t addr_length_receive;
 
 // Variables to timer
-/* Structure with time values */
+// Structure with time values
 struct itimerspec timer_control_spec;
-/* Timer variable */
+// Timer variable
 timer_t	timer_to_control;
-/* Signal variable */
+// Signal variable
 struct sigevent timer_control_signal;
 
-// Robot position & coresponding mutex's
+// Robot position & corresponding mutex's
 robot_joint_position_t setpoint_robot_position;
 robot_joint_position_t current_robot_position;
 
@@ -44,9 +44,8 @@ void initialize_robot_communication(){
     control_socket_send = socket(PF_INET, SOCK_DGRAM, 0);
     // Check is socket create property
     if (control_socket_send == -1) {
-
         write_to_log("Cannot create send socket UDP");
-        throw std::runtime_error("Error during create send socket");
+        throw std::runtime_error("Error during create send socket");    // throw error and end program
     }
     // Initialize socket address to 0
     memset(&socket_udp_control_send_addr, 0, sizeof(socket_udp_control_send_addr));
@@ -69,14 +68,11 @@ void initialize_robot_communication(){
     socket_udp_control_receive_addr.sin_port = htons(UDP_CONTROL_PORT_RECEIVE); // set udp port
     socket_udp_control_receive_addr.sin_addr.s_addr = INADDR_ANY;   // bind to all address
 
-    // Disable timeout receive socket on Cygwin compiler
-    #ifndef __CYGWIN__  // Disable timeout receive socket on Cygwin to prevent error
-        // set 1sec timeout for receive
-        struct timeval timeout;
-        timeout.tv_sec = 1;
-        timeout.tv_usec = 0;
-        setsockopt(control_socket_receive, SOL_SOCKET, SO_RCVTIMEO,  (const char*)&timeout, sizeof(timeout));
-    #endif
+    // set 1sec timeout for receive
+    struct timeval timeout;
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+    setsockopt(control_socket_receive, SOL_SOCKET, SO_RCVTIMEO,  (const char*)&timeout, sizeof(timeout));
     addr_length_receive = sizeof(server_addr);
 
     // Bind socket to socket address struct
@@ -112,16 +108,15 @@ void receive_robot_position_packet(){
         memcpy(current_robot_position, received_packet.received_position, sizeof(received_packet.received_position));
         // unlock robot current joint position mutex
         current_robot_position_mutex.unlock();
+        // send wake up signal only in AUTO mode
         if(robot_trajectory_mode == Trajectory_control_type::AUTO){
             // check is set point position is reached
             bool current_position_status = is_position_reached();
             // if set point position is reached then send wake up signal to trajectory thread
             if(current_position_status == true and new_position_selected == true)
-                kill(getpid(), SIGNAL_WAKE_UP_TRAJECTORY_THREAD);   // send signal to your own process
+                kill(getpid(), SIGNAL_WAKE_UP_TRAJECTORY_THREAD);   // send wake up signal to your trajectory thread
         }
     }
-//    else  // debug print
-//        std::cerr<<"rec: "<<status<<" -> "<< strerror(errno) <<std::endl;
 }
 
 // Write robot position to reach
@@ -131,12 +126,11 @@ void send_robot_position_packet(){
     struct sched_param param;   //Structure of other thread parameters
     /* Read modify and set new thread priority */
     pthread_getschedparam( pthread_self(), &policy, &param);
-    param.sched_priority = sched_get_priority_max(policy) - 1;  // Read minimum value for thread priority
+    param.sched_priority = sched_get_priority_max(policy) - 1;  // Read max value for thread priority
     pthread_setschedparam( pthread_self(), policy, &param);   //set max -1 thread priority for this thread
     // Packet to send
     PacketToSend packet_to_send;
     // create variable for setpoint position and digital output
-    robot_joint_position_t set_pos_out;
     robot_digital_data_t digit_out;
     // read setpoint joint position and digital output
     get_setpoint_robot_position(packet_to_send.setpoint_position);
@@ -147,6 +141,7 @@ void send_robot_position_packet(){
                             (const struct sockaddr *) &socket_udp_control_send_addr, sizeof(socket_udp_control_send_addr));
     // check is message is not sent property
     if (status < 0){
+        write_to_console("Cannot send UDP packet");
         write_to_log("Cannot send packet");
     }
 }
@@ -160,7 +155,7 @@ void* communicate_with_robot(void* _arg_input) {
 
     /* Read modify and set new thread priority */
     pthread_getschedparam( pthread_self(), &policy, &param);
-    param.sched_priority = sched_get_priority_max(policy) - 2;  // Read minimum value for thread priority
+    param.sched_priority = sched_get_priority_max(policy) - 2;  // Read max value for thread priority
     pthread_setschedparam( pthread_self(), policy, &param);   //set max -2 thread priority for this thread
 
     // Initialize communication with robot
@@ -229,7 +224,7 @@ void get_current_robot_position(robot_joint_position_t _current_position){
 }
 
 // write robot setpoint joint position
-void write_setpoint_robot_position(const robot_joint_position_t _setpoint_position){
+void set_setpoint_robot_position(const robot_joint_position_t _setpoint_position){
     // lock rocot setpoint position mutex
     setpoint_robot_position_mutex.lock();
     // write new robot position

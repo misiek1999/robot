@@ -4,7 +4,7 @@
 
 #ifndef ROBOT_SUPERVISOR_H
 #define ROBOT_SUPERVISOR_H
-// Include liblaries
+// Include libraries
 #include "signal.h"
 #include "thread"
 #include "atomic"
@@ -12,6 +12,7 @@
 #include "logger.h"
 #include "console_interface.h"
 #include "trajectory_generator.h"
+
 // External close signal
 #define EXTERNAL_CLOSE_PROGRAM SIGINT
 // Interprocess close signal
@@ -20,7 +21,7 @@
 #define EMERGENCY_STOP_SIGNAL SIGRTMIN
 
 /*
- * Define global enum of controller state
+ * Define global enum of program state
  * We define 4 state:
  * 0 - RUNNING          - normal work of robot (DEFAULT)
  * 1 - STOP             - stop the movement of the robot with the possibility to continue the movement

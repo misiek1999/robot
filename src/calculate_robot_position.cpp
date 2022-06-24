@@ -36,7 +36,8 @@ int calculate_inverse_robot_kinematics(Manipulator_position cartesian_position,
     float angle_1 = atan2(setpoint_y, setpoint_x);
 
     // Calculate position to last joint
-    float L = pow(setpoint_z - ARM_1_LENGTH,2) + pow(setpoint_x,2) +  pow(setpoint_y,2) - pow(ARM_2_LENGTH,2) -  pow(ARM_3_LENGTH,2);
+    float L = pow(setpoint_z - ARM_1_LENGTH,2) + pow(setpoint_x,2) +  pow(setpoint_y,2) -
+            pow(ARM_2_LENGTH,2) -  pow(ARM_3_LENGTH,2);
     L = L /(2 * ARM_2_LENGTH * ARM_3_LENGTH);
     float sin_angle_3_pos = sqrt(1 - L*L);
     float sin_angle_3_neg = -sqrt(1 - L*L);
@@ -58,7 +59,7 @@ int calculate_inverse_robot_kinematics(Manipulator_position cartesian_position,
     angle_3_pos = angle_3_pos * 180 / M_PI;
     angle_3_neg = angle_3_neg * 180 / M_PI;
 
-    // find manipulator position of each solution
+    // find manipulator position for each solution
     Manipulator_position calc_sol[4];
     robot_joint_position_t solutions[4] = {{angle_1, angle_2_pos, angle_3_pos},
                                            {angle_1, angle_2_neg, angle_3_pos},
@@ -67,8 +68,8 @@ int calculate_inverse_robot_kinematics(Manipulator_position cartesian_position,
     for (size_t itr = 0; itr < 4; ++itr)
         calculate_simple_robot_kinematics(calc_sol[itr], solutions[itr]);
 
-    // select correct solution
     float angle_2 = NAN, angle_3 = NAN; // Uninitialized variable
+    // select correct solution
     for (size_t itr = 0; itr < 4; ++itr)
         if (check_manipulator_position_tolerance(calc_sol[itr], cartesian_position)){
             angle_2 = solutions[itr][1];

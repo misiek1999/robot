@@ -68,8 +68,8 @@ void write_to_console(const  char* str_to_console){
  * Inline function to reduce unnecessary calls
  */
 inline void display_queue_messages(){
-    // Timeout for receive data 10ms
-    struct timespec rec_timeout = {0, 10000000};
+    // Timeout for receive data 500ms
+    struct timespec rec_timeout = {0, 500000000};
     // read data from queue
     int status = mq_timedreceive(mes_to_console_queue, (char *)&mq_console_read_data[0], sizeof(mq_consol_data_t), NULL, &rec_timeout);
     if (status >= 0 ) { // If message is receive successful then save it to file
@@ -87,7 +87,7 @@ void display_manual_instruction(){
     write_to_console("-------------------------------------- \r\nTo move 1 joint press:  < [q] - [w] >");
     write_to_console("To move 2 joint press:  < [a] - [s] >\r\nTo move 3 joint press:  < [z] - [x] >");
     write_to_console("To write binary output press number from 1 to 8\r\nPress 'c' to exit\t\tPress 't' to stop");
-    // Disable input console display
+    // Disable display of console input
     struct termios termios;
     tcgetattr(STDIN_FILENO, &termios);
     termios.c_lflag &= ~ECHO;
@@ -104,15 +104,16 @@ void read_control_from_console(){
     // Set the terminal to raw mode, works only on linux
     system("stty raw");
     read_char = getchar();    // Read char from console
-    fflush(stdin);  // clear console input buffer
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max());  // clear console input buffer
     // Select right option
     switch (read_char) {
         case 'c':
             set_program_state(ProgramState::CLOSE_PROGRAM);  // Close program after press 'q'
             break;
         case 't':
-            set_program_state(ProgramState::STOP);
-            stop_robot_movement(); // Stop program after press 't'
+            set_program_state(ProgramState::STOP);   // Stop program after press 't'
+            stop_robot_movement();
             break;
         case 'q':
             send_manual_control(ManualModeControlInstruction::joint_1_left);  // Turn 1 joint
@@ -204,15 +205,14 @@ void read_file_from_console_path(){
             }
         }else
             write_to_console("Invalid path! Please specified valid path." );
-        // If program is shutdown, then return
+        // If program state is shutdown, then end function
         if (get_program_state() == ProgramState::CLOSE_PROGRAM)
             return;
     }
-    // Works only on unix system
     char buff [100];
     sprintf(buff, "Specified path is correct. Path: %s ", path_to_file.c_str());
     write_to_console(buff);
-    is_file_trajectory_load = true; // set global atomic flag to true
+    is_file_trajectory_load = true; // set trajectory load flag to true
 }
 
 /*
@@ -229,8 +229,6 @@ void console_communication_auto_mode(){
     while(get_program_state() != ProgramState::CLOSE_PROGRAM){
         // display queue data from other thread's
         display_queue_messages();
-        // Wait 10ms to next loop iteration
-        std::this_thread::sleep_for(std::chrono::milliseconds (10));
     }
 }
 
@@ -247,8 +245,6 @@ void console_communication_manual_mode(){
         read_control_from_console();
         // display queue data from other thread's
         display_queue_messages();
-        // Wait 10ms to next loop iteration
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 
@@ -290,7 +286,7 @@ static void console_stop_handler(int input_signal){
         } else if (c == 'r') {
             symbol_detected = true; // if char 'c' is detected then close application
             set_program_state(ProgramState::RUNNING);
-            write_to_console("\rProgram resumed");
+            write_to_console("Program resumed");
         }
     }
 }
@@ -306,22 +302,21 @@ void * read_console_input(void *pVoid){
     pthread_getschedparam( pthread_self(), &policy, &param);
     param.sched_priority = sched_get_priority_min(policy)+1;  // Read minimum value for thread priority
     pthread_setschedparam( pthread_self(), policy, &param);   //set almost minimum thread priority for this thread
-    // set cancel mode in this thread
+    // set asynchronous cancel in this thread
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,nullptr);
 
     // Accept only stop and emergency stop signal in this thread
     sigset_t read_mask;
     sigfillset(&read_mask);
-    sigdelset(&read_mask, SIGNAL_STOP_CONSOLE); // Block stop signal to console
-    sigdelset(&read_mask, SIGNAL_EMERGENCY_STOP_CONSOLE); // Block emergency stop signal to console
-    pthread_sigmask(SIG_SETMASK, &read_mask, nullptr); // Add signals to supervisor_mask
+    sigdelset(&read_mask, SIGNAL_STOP_CONSOLE); // Enable stop signal to console
+    sigdelset(&read_mask, SIGNAL_EMERGENCY_STOP_CONSOLE); // Enable emergency stop signal to console
+    pthread_sigmask(SIG_SETMASK, &read_mask, nullptr); // Add signals to read_mask
 
     // set handler for upper signals
     struct sigaction emergency_stop_action;
     emergency_stop_action.sa_handler = console_emergency_stop_handler;
     sigemptyset(&emergency_stop_action.sa_mask);
     emergency_stop_action.sa_flags = 0;
-    // Register signal handler for EMERGENCY_STOP_SIGNAL and INTERPOCESS_CLOSE_PROGRAM_SIGNAL
     if (sigaction(SIGNAL_EMERGENCY_STOP_CONSOLE, &emergency_stop_action, nullptr) < 0) {
         std::cerr <<  "Cannot register EMERGENCY STOP CONSOLE handler.\r\n";
         throw std::runtime_error("Cannot register EMERGENCY STOP CONSOLE handler");
@@ -333,7 +328,7 @@ void * read_console_input(void *pVoid){
     interprocess_close_action.sa_flags = 0;
     if (sigaction(SIGNAL_STOP_CONSOLE, &interprocess_close_action, nullptr) < 0) {
         std::cerr <<  "Cannot register STOP CONSOLE handler.\r\n";
-        throw std::runtime_error("Cannot register EMERGENCY STOP CONSOLE handler");
+        throw std::runtime_error("Cannot register STOP CONSOLE handler");
     }
 
     //Initialize console input

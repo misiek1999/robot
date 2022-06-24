@@ -81,7 +81,7 @@ void manual_control(){
         // Check joint limit
         if (check_joint_limit(curr_pos)) {
             //if new position is correct then write new robot position
-            write_setpoint_robot_position(curr_pos);
+            set_setpoint_robot_position(curr_pos);
         }
     }
 }

@@ -17,13 +17,13 @@ std::string get_time_in_string(){
     time_t curr_time;
     tm * curr_tm;
     time(&curr_time);
-    curr_tm = localtime(&curr_time);    //dont use locatime in other threads
+    curr_tm = localtime(&curr_time);
     char time_str[32];
     strftime(time_str, 32, "%H:%M:%S - %d.%m.%Y", curr_tm);
     return std::string(time_str);
 };
 
-// try to craete directory to given file
+// try to create directory to given file
 bool create_directory(const char*file_path){
     std::error_code err;
     if (!std::filesystem::create_directories(file_path, err))
@@ -43,7 +43,7 @@ void log_init(){
     time_t curr_time;
     tm * curr_tm;
     time(&curr_time);
-    curr_tm = localtime(&curr_time);//dont use locatime in other threads
+    curr_tm = localtime(&curr_time);
     char file_name[64];
     // Format string from date
     strftime(file_name, 64, "log/log_%H%M_%d%m%Y.log", curr_tm);

@@ -11,7 +11,7 @@
 #include "controll_interface.h"           // Load global variables
 
 /*
- *  Check difference between two manipulator position. Return true if difference is smaller than tolerance
+ *  Check difference between two manipulator position. Return true if distance is smaller than tolerance
  */
 bool check_manipulator_position_tolerance(Manipulator_position first_pos, Manipulator_position second_pos);
 

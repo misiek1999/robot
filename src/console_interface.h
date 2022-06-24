@@ -30,7 +30,7 @@
 #define SIGNAL_EMERGENCY_STOP_CONSOLE SIGRTMIN+2
 
 // Global message queue to console
- extern mqd_t	mes_to_console_queue;
+extern mqd_t	mes_to_console_queue;
 extern struct	mq_attr mes_to_console_queue_attr;
 
 // Message queue buffer type and queue size

@@ -13,11 +13,10 @@
 #include "console_interface.h"
 
 // Global static bool variable with new isntruction information
-extern bool new_position_selected; 
+extern std::atomic<bool> new_position_selected;
 
 /*
  * Each function call execute next instruction from global instruction buffer
- * Return false if executing failed
 */
 void execute_instructions();
 

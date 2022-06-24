@@ -1,12 +1,6 @@
 /*
  * This is the main function of robot trajectory generator
- * Include all necessary libraries, variables and function
- * Launch the following threads:
- * 1 - Supervisor
- * 2 - Robot internet interface
- * 3 - Trajectory generator
- * 4 - Console interface
- * 5 - File log 
+ * Initialize message queues used in program and launch threads with task
  */
 
 // Include libraries
@@ -70,8 +64,9 @@ int main() {
     if (!launch_threads())// If initialization failed then stop application
         exit(EXIT_FAILURE);
 
-    // Enter to infinite loop until program enter to close mode
+    // Enter to loop until program enter to close mode
     while (get_program_state() != ProgramState::CLOSE_PROGRAM){
+        // sleep for 1s until close program
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 

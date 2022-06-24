@@ -2,11 +2,12 @@
 // Created by Ja on 16.05.2022.
 //
 /*
- * This file include all constance varaibles of robot arm like. lenght, motor params etc.
+ * This file includes all constance variables of robot arm.
  * Robot arm structure is RRR
  */
 #ifndef ROBOT_ROBOT_ARM_PARAMS_H
 #define ROBOT_ROBOT_ARM_PARAMS_H
+
 // Include libraries
 #include "atomic"
 
@@ -27,7 +28,6 @@ typedef std::uint8_t robot_digital_data_t;                    // Robot universal
 typedef std::atomic <robot_digital_data_t> robot_binary_interface_t; // Atomic robot digital interface
 // First joint
 #define ARM_1_LENGTH 12.0f          // Length of first arm of robot [cm]
-#define MOTOR_SPEED_DEG 2.83f     // Speed of first motor [ms/deg]
 
 // Second joint
 #define ARM_2_LENGTH 10.0f          // Length of second arm of robot [cm]
@@ -35,9 +35,11 @@ typedef std::atomic <robot_digital_data_t> robot_binary_interface_t; // Atomic r
 // Third joint
 #define ARM_3_LENGTH 10.0f          // Length of third arm of robot [cm]
 
+#define MOTOR_SPEED_DEG 2.83f     // Speed of motors [ms/deg]
+
 // Tolerance of error robot joint positions
-#define ROBOT_JOINT_POSITION_TOLERANCE 0.5f
+#define ROBOT_JOINT_POSITION_TOLERANCE 0.1f
 // Tolerance of error robot manipulator positions
-#define ROBOT_MANIPULATOR_POSITION_TOLERANCE 0.1f
+#define ROBOT_MANIPULATOR_POSITION_TOLERANCE 0.01f
 
 #endif //ROBOT_ROBOT_ARM_PARAMS_H

@@ -4,8 +4,8 @@
 /*
  * This file has function to generate robot trajectory
  * We define two type of robot trajectory:
- * 1. User enter control signal using console
- * 2. Load predefine file with robot trajectory
+ * 1. Manual - User enter control signal using console
+ * 2. Auto - Load predefine file with robot trajectory
  *
  * We can choose type of robot trajectory after starting application by entering valid number to console
  */
@@ -23,7 +23,7 @@
 #include "controll_interface.h"
 #include "instruction_processor.h"
 
-// Signal used to wake up trajectory generator thread after fine or go_ptp suspend
+// Signal used to wake up trajectory generator thread after instruction fine or go_ptp
 #define SIGNAL_WAKE_UP_TRAJECTORY_THREAD SIGRTMIN+3
 
 // global state of loading trajectory from file
@@ -56,20 +56,21 @@ enum ManualModeControlInstruction{
     joint_3_right,
     joint_3_left
 };
+
 // Message queue from console to trajectory generator in manual mode
 extern mqd_t mes_to_trajectory_queue;
-extern struct	mq_attr mes_to_trajectory_queue_attr;
+extern struct mq_attr mes_to_trajectory_queue_attr;
 typedef ManualModeControlInstruction mq_traj_manual_data_t;
 
 // Function to send message with instruction to trajectory generator in manual mode
 void send_manual_control(ManualModeControlInstruction _instruction);
 
-// Function to run trajectory generator in new thread
+// Function to run trajectory generator. Run this function in new thread
 void* generate_trajectory(void *pVoid);
 
 /*
  * Check is position reached
- * Compare global setpoint and current robot joint position, if difference is smaller than tolerance then function
+ * Compare global set-point and current robot joint position, if difference is smaller than tolerance then function
  * return true else function return false.
 */
 bool is_position_reached();

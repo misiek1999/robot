@@ -1,7 +1,7 @@
 //
 // Created by Ja on 16.05.2022.
 //
-// This file include all functions which save data to file
+// This file includes all functions which save data to file
 #ifndef ROBOT_LOGGER_H
 #define ROBOT_LOGGER_H
 #include "iostream"
@@ -23,8 +23,6 @@ typedef char mq_log_data_t[48];    // received data type
 void write_to_log(const  char* str_to_log);
 // Logging data to file from message queue
 void * log_data_to_file(void *pVoid);
-
-extern std::ofstream file_log;
 
 #endif //ROBOT_LOGGER_H
 

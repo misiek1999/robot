@@ -10,7 +10,7 @@
 #include "controll_interface.h"
 
 /*
- * Interpol linear trajectory between current robot position and setpoint robot position
+ * Interpol linear trajectory between current robot position and set-point robot position
  * This method uses inverse robot kinematic
  * Return 0 if trajectory was created successful
  * If returned value is higher than 0 check error code table in fine_trajectory.cpp
