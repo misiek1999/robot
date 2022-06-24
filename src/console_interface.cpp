@@ -105,7 +105,6 @@ void read_control_from_console(){
     system("stty raw");
     read_char = getchar();    // Read char from console
     std::cin.clear();
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max());  // clear console input buffer
     // Select right option
     switch (read_char) {
         case 'c':

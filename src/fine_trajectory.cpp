@@ -37,7 +37,7 @@ int generate_fine_trajectory(robot_joint_position_t _next_position, Manipulator_
     dist += pow(_setpoint.z - curr_manipulator_cartesian_pos.z, 2);
     dist = sqrt(dist);
     // calculate the displacement factor
-    float u = _linear_speed *(CONTROL_TIME_PERIOD / 1000) / dist;
+    float u = _linear_speed *(CONTROL_TIME_PERIOD / 1000.0f) / dist;
     // if u factor is higher than 1 then move manipulator directly to setpoint position
     if(u < 1){
         // find next point to reach to generate fine trajectory
