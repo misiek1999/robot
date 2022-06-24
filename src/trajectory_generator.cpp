@@ -5,17 +5,15 @@
 #include "trajectory_generator.h"
 // Manual mode position change value
 #define MANUAL_MODE_CONTROL_CHANGE_VALUE 1.0f;
-// Tolerance of robot joint position [deg]
-#define ROBOT_POSITION_TOLERANCE 1.0f
+
+// barrier to lock trajectory barrier
+pthread_barrier_t trajectory_barrier;
 
 // global state of loading trajectory from file
 std::atomic<bool> is_file_trajectory_load;
 
 // global atomic enum with trajectory generator mode
 std::atomic<Trajectory_control_type>  robot_trajectory_mode;
-
-// global trajectory generation mask
-sigset_t trajectory_mask;
 
 // Message queue for data from console to trajectory generator
 mqd_t	mes_to_trajectory_queue;
@@ -113,20 +111,6 @@ void* generate_trajectory(void *pVoid){
     pthread_setschedparam( pthread_self(), policy, &param);   //set thread priority for this thread to max -3
     // set cancel mode in this thread
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,nullptr);
-
-    // set handler for wake up singal in trajecotry generator mode
-    sigfillset(&trajectory_mask);
-    sigdelset(&trajectory_mask, SIGNAL_WAKE_UP_TRAJECTORY_THREAD); //Allow woke up signal to trajectory generator thread
-    pthread_sigmask(SIG_SETMASK, &trajectory_mask, NULL); // Add signals to trajectory_mask
-    //associate dummy function to wake up singal 
-    struct sigaction interprocess_wake_up_action;
-    interprocess_wake_up_action.sa_handler = wake_up_dummy_function;
-    sigemptyset(&interprocess_wake_up_action.sa_mask);
-    interprocess_wake_up_action.sa_flags = 0;
-    if (sigaction(SIGNAL_WAKE_UP_TRAJECTORY_THREAD, &interprocess_wake_up_action, NULL) < 0) {
-        std::cerr <<  "Cannot register WAKE UP handler.\n";
-        throw std::runtime_error("cannot register wake up handler");
-    }
 
     // Enter to loop until program close
     while(true){

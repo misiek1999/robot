@@ -23,14 +23,11 @@
 #include "controll_interface.h"
 #include "instruction_processor.h"
 
-// Signal used to wake up trajectory generator thread after instruction fine or go_ptp
-#define SIGNAL_WAKE_UP_TRAJECTORY_THREAD SIGRTMIN+3
+// barrier to lock trajectory barrier
+extern pthread_barrier_t trajectory_barrier;
 
 // global state of loading trajectory from file
 extern std::atomic<bool> is_file_trajectory_load;
-
-// global trajectory generation mask
-extern sigset_t trajectory_mask;
 
 /*
  * Enum include two state of robot trajectory generator

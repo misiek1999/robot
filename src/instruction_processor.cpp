@@ -246,8 +246,8 @@ void execute_instructions(){
         if (instruction == Trajectory_instruction_set::FINE or instruction == Trajectory_instruction_set::GO_PTP){
             // enable flag with new position selected
             new_position_selected = true;
-            // handle wake up signal in this thread
-            sigsuspend(&trajectory_mask);
+            // Block this thread until reach set point position
+            pthread_barrier_wait(&trajectory_barrier);
             // disable flag with new position selected
             new_position_selected = false;
         }

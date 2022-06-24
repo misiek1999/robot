@@ -112,9 +112,9 @@ void receive_robot_position_packet(){
         if(robot_trajectory_mode == Trajectory_control_type::AUTO){
             // check is set point position is reached
             bool current_position_status = is_position_reached();
-            // if set point position is reached then send wake up signal to trajectory thread
+            // if set point position is reached then unlock barrier
             if(current_position_status == true and new_position_selected == true)
-                kill(getpid(), SIGNAL_WAKE_UP_TRAJECTORY_THREAD);   // send wake up signal to your trajectory thread
+                pthread_barrier_wait(&trajectory_barrier);
         }
     }
 }
@@ -157,6 +157,9 @@ void* communicate_with_robot(void* _arg_input) {
     pthread_getschedparam( pthread_self(), &policy, &param);
     param.sched_priority = sched_get_priority_max(policy) - 2;  // Read max value for thread priority
     pthread_setschedparam( pthread_self(), policy, &param);   //set max -2 thread priority for this thread
+
+    // Init posix thread barrier
+    pthread_barrier_init(&trajectory_barrier, NULL, 2);
 
     // Initialize communication with robot
     initialize_robot_communication();
