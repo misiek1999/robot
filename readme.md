@@ -26,6 +26,9 @@ Use console input to contole robot movement.
 
 ### Information 
 In order to work properly, the application must be connected to a simulator or real robot using the internet.
+
 The program was compiled on Ubuntu 20.04 using Clang 10. 
+
 Example scripts are placed in the directory *sample*
+
 GitHub: https://github.com/misiek1999/robot
