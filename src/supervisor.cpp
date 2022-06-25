@@ -10,6 +10,8 @@ std::atomic <ProgramState> program_state;
 // Robot set-point position in stop mode
 robot_joint_position_t set_point_position_in_stop_mode;
 
+// supervisor thread handler
+pthread_t supevisor_thread_id;
 // change set-point position to current position and save set-point position
 void lock_robot_movement(){
     // read set-point robot position
@@ -73,7 +75,7 @@ void set_program_state(const ProgramState _state_to_set){
     // Send interprocess signal to process threads
     switch (program_state) {
         case ProgramState::CLOSE_PROGRAM:
-            kill(getpid(), INTERPOCESS_CLOSE_PROGRAM_SIGNAL);   // send interprocess signal to stop supervisor thread
+            pthread_kill(supevisor_thread_id, INTERPOCESS_CLOSE_PROGRAM_SIGNAL);// send interprocess signal to stop supervisor thread
             break;
         case ProgramState::EMERGENCY_STOP:
             kill(getpid(), SIGNAL_EMERGENCY_STOP_CONSOLE);      // send emergency stop signal to console thread
@@ -88,6 +90,8 @@ void set_program_state(const ProgramState _state_to_set){
 
 // Supervisor thread function
 void * program_supervisor(void *pVoid){
+    // get self pthread id
+    supevisor_thread_id = pthread_self();
     // Init thread priority
     int policy;     //Scheduling policy: FIFO or RR
     struct sched_param param;   //Structure of other thread parameters

@@ -300,8 +300,6 @@ void * read_console_input(void *pVoid){
     pthread_getschedparam( pthread_self(), &policy, &param);
     param.sched_priority = sched_get_priority_min(policy)+1;  // Read minimum value for thread priority
     pthread_setschedparam( pthread_self(), policy, &param);   //set almost minimum thread priority for this thread
-    // set asynchronous cancel in this thread
-    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,nullptr);
 
     // Accept only stop and emergency stop signal in this thread
     sigset_t read_mask;
