@@ -1,4 +1,7 @@
-fine 12 10 10 10
+fine 18 0 12 10
+wait 1000
+fine 0 20 12 200
+wait 1234
 go_ptp 0 0 90
-wait 500
+wait 1000
 exit
