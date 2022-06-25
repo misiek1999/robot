@@ -96,9 +96,30 @@ void display_manual_instruction(){
 }
 
 /*
- * Read control from console
+ * Read control form console in auto mode
  */
-void read_control_from_console(){
+void read_auto_control_from_console(){
+    // Create temp variable for income char
+    char read_char;
+    read_char = getchar();    // Read char from console
+    std::cin.clear();
+    // Select right option
+    switch (read_char) {
+        case 'c':
+            set_program_state(ProgramState::CLOSE_PROGRAM);  // Close program after press 'q'
+            break;
+        case 't':
+            stop_robot();  // Stop program after press 't'
+            break;
+        default:
+            break;  // Do nothing after selecting undefined key;
+    }
+}
+
+/*
+ * Read control from console in manual mode
+ */
+void read_manual_control_from_console(){
     // Create temp variable for income char
     char read_char;
     // Set the terminal to raw mode, works only on linux
@@ -220,13 +241,14 @@ void read_file_from_console_path(){
 void console_communication_auto_mode(){
     // Read path to predefined trajectory from console
     read_file_from_console_path();
+    // Display control command in auto mode control
+    write_to_console("Press 'c' to exit\tPress 't' to stop");
     // If program is shutdown before final setup, close function
     if (get_program_state() == ProgramState::CLOSE_PROGRAM)
         return;
     // Enter to infinity loop until the program is terminated
     while(get_program_state() != ProgramState::CLOSE_PROGRAM){
-        // display queue data from other thread's
-        display_queue_messages();
+        read_auto_control_from_console();
     }
 }
 
@@ -240,9 +262,7 @@ void console_communication_manual_mode(){
     // Enter to infinity loop until the program is terminated
     while(get_program_state() != ProgramState::CLOSE_PROGRAM){
         // read control from console
-        read_control_from_console();
-        // display queue data from other thread's
-        display_queue_messages();
+        read_manual_control_from_console();
     }
 }
 
