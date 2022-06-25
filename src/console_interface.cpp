@@ -74,7 +74,7 @@ inline void display_queue_messages(){
     int status = mq_timedreceive(mes_to_console_queue, (char *)&mq_console_read_data[0], sizeof(mq_consol_data_t), NULL, &rec_timeout);
     if (status >= 0 ) { // If message is receive successful then save it to file
         // Print read data in console
-        std::cout<< mq_console_read_data << std::endl;
+        std::cout<< mq_console_read_data << "\r\n";
     }
 }
 
@@ -86,7 +86,7 @@ void display_manual_instruction(){
     // Display control instruction
     write_to_console("-------------------------------------- \r\nTo move 1 joint press:  < [q] - [w] >");
     write_to_console("To move 2 joint press:  < [a] - [s] >\r\nTo move 3 joint press:  < [z] - [x] >");
-    write_to_console("To write binary output press number from 1 to 8\r\nPress 'c' to exit\t\tPress 't' to stop");
+    write_to_console("To write binary output press number from 1 to 8\r\nPress 'c' to exit\tPress 't' to stop");
     // Disable display of console input
     struct termios termios;
     tcgetattr(STDIN_FILENO, &termios);
@@ -269,24 +269,51 @@ static void console_emergency_stop_handler(int input_signal){
     set_program_state(ProgramState::CLOSE_PROGRAM);
 }
 
+// thread id od async console input
+pthread_t async_console_input_thread;
+
+// Read single char from console input
+static char read_console_char(){
+    async_console_input_thread = pthread_self();
+    char c;
+    std::cin >> c;
+    return c;
+}
+
 /*
  * Wait for console input in stop mode
  */
 static void console_stop_handler(int input_signal){
+    // stop communicate
     write_to_console("Program stopped!\r\nPress 'c' to close program or 'r' to resume");
-    char c;
-    bool symbol_detected = false;
-    while(!symbol_detected) {
-        std::cin >> c; // read char from console
-        if (c == 'c') {
-            symbol_detected = true; // if char 'c' is detected then close application
-            set_program_state(ProgramState::CLOSE_PROGRAM);
-        } else if (c == 'r') {
-            symbol_detected = true; // if char 'c' is detected then close application
-            resume_robot_movement();
-            write_to_console("\r\nProgram resumed");
+    char c; // variable for console input char
+    bool symbol_detected = false;   // flag for end stop loop
+    // console input timeout
+    std::chrono::milliseconds timeout(100); //100ms timeout
+    std::future<char> future = std::async(read_console_char);
+    std::future_status status;
+    // loop until detect valid char or external resume 
+    while(!symbol_detected || get_program_state() == ProgramState::STOP) {
+        // wait for console input for 100ms
+        status = future.wait_for(timeout);
+        if ( status == std::future_status::ready){
+            c = future.get();
+            // valid input char
+            if (c == 'c') {
+                symbol_detected = true; // if char 'c' is detected then close application
+                set_program_state(ProgramState::CLOSE_PROGRAM);
+            } else if (c == 'r') {
+                symbol_detected = true; // if char 'c' is detected then close application
+                resume_robot_movement();
+                write_to_console("Program resumed");
+            }else{
+                //resume waiting for console input 
+                future = std::async(read_console_char);
+            }
         }
     }
+    // terminate async console input thread
+    pthread_cancel(async_console_input_thread);
 }
 
 /*
@@ -355,7 +382,7 @@ void * read_console_input(void *pVoid){
  */
 void * console_interface(void *pVoid){
     // Display welcome message
-    std::cout <<"Welcome to robot trajectory generator!" <<std::endl;
+    std::cout <<"Welcome to robot trajectory generator!" <<"\r\n";;
 
     // Init thread priority
     int policy;     //Scheduling policy: FIFO or RR

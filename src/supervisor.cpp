@@ -33,10 +33,13 @@ void stop_robot(){
 
 // resume robot movement and change program state to RUNNING
 void resume_robot_movement(){
-    // load previous robot set-point position
-    set_setpoint_robot_position(set_point_position_in_stop_mode);
-    // set program state to running
-    set_program_state(ProgramState::RUNNING);
+    // reasume program only in stop mode 
+    if(get_program_state() == ProgramState::STOP){
+        // load previous robot set-point position
+        set_setpoint_robot_position(set_point_position_in_stop_mode);
+        // set program state to running
+        set_program_state(ProgramState::RUNNING);
+    }
 }
 
 // Function to close program when closing signal was detected
@@ -44,7 +47,7 @@ static void exit_handler(int input_signal){
     // Send message to log and console
     write_to_console("External close signal detected!");
     write_to_log("External close signal detected!");
-    // set close program state s
+    // set close program state
     set_program_state(ProgramState::CLOSE_PROGRAM);
 }
 

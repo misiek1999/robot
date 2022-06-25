@@ -23,7 +23,9 @@
 #include "sys/fcntl.h"
 #include "stdlib.h"
 #include "math.h"
-
+#include "future"
+#include "chrono"
+#include "thread"
 
 // Signal used to communicate with console
 #define SIGNAL_STOP_CONSOLE SIGRTMIN+1
