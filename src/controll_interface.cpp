@@ -108,7 +108,7 @@ void receive_robot_position_packet(){
         memcpy(current_robot_position, received_packet.received_position, sizeof(received_packet.received_position));
         // unlock robot current joint position mutex
         current_robot_position_mutex.unlock();
-        // send wake up signal only in AUTO mode
+        // unblock trajectory thread in AUTO mode
         if(robot_trajectory_mode == Trajectory_control_type::AUTO){
             // check is set point position is reached
             bool current_position_status = is_position_reached();

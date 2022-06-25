@@ -55,7 +55,7 @@ void go_ptp_instruction(InstructionData _data){
         position_unreachable_alarm();
     }
     char buff [40];
-    sprintf(buff, "Go ptp - j1:%.2f, j2:%.2f, j3:%.2f", new_position[0], new_position[1], new_position[2]);
+    sprintf(buff, "Go ptp:  j1:%.2f, j2:%.2f, j3:%.2f", new_position[0], new_position[1], new_position[2]);
     write_to_console(buff);
     write_to_log(buff);
 }
@@ -242,8 +242,8 @@ void execute_instructions(){
         if (!stop_auto_instruction_iterator)
             ++instruction_number_iterator;
 
-        // If selected instruction is go_ptp or fine, suspend thread until reach set point position
-        if (instruction == Trajectory_instruction_set::FINE or instruction == Trajectory_instruction_set::GO_PTP){
+        // If selected instruction is go_ptp, block thread until reach set point position
+        if (instruction == Trajectory_instruction_set::GO_PTP){
             // enable flag with new position selected
             new_position_selected = true;
             // Block this thread until reach set point position
