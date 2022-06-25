@@ -22,7 +22,7 @@ void position_unreachable_alarm(){
     sprintf(buff, "Position unreachable error at: %d !", (int)instruction_number_iterator);
     write_to_log(buff);
     // Lock robot movement
-    stop_robot_movement();
+    lock_robot_movement();
     // change program state to emergency stop
     set_program_state(ProgramState::EMERGENCY_STOP);
 }
@@ -157,22 +157,22 @@ void wait_instruction(InstructionData _data){
 void stop_instruction(){
     write_to_console("Instruction stop");
     write_to_log("Instruction stop");
-    // Lock robot movement
-    stop_robot_movement();
+    // stop robot
+    stop_robot();
 }
 
 void resume_instruction(){
     write_to_console("Instruction resume");
     write_to_log("Instruction resume");
     // Change program state to resume
-    set_program_state(ProgramState::RUNNING);
+    resume_robot_movement();
 }
 
 void exit_instruction(){
     write_to_console("Program end successful");
     write_to_log("Program end successful");
     // Lock robot movement
-    stop_robot_movement();
+    lock_robot_movement();
     // Change program state to close program
     set_program_state(ProgramState::CLOSE_PROGRAM);
 }

@@ -7,15 +7,34 @@
 // Program state
 std::atomic <ProgramState> program_state;
 
-// change set-point position to current position to stop robot movement and change program state to STOP
-void stop_robot_movement(){
-    // Change program state to stop
-    set_program_state(ProgramState::STOP);
+// Robot set-point position in stop mode
+robot_joint_position_t set_point_position_in_stop_mode;
+
+// change set-point position to current position and save set-point position
+void lock_robot_movement(){
+    // read set-point robot position
+    get_setpoint_robot_position(set_point_position_in_stop_mode);
     // read current robot position
     robot_joint_position_t curr_pos;
     get_current_robot_position(curr_pos);
     // lock robot at current position
     set_setpoint_robot_position(curr_pos);
+}
+
+//  Stop robot movement and change program state to STOP
+void stop_robot(){
+    // change program state to STOP
+    set_program_state(ProgramState::STOP);
+    // stop robot movement
+    lock_robot_movement();
+}
+
+// resume robot movement and change program state to RUNNING
+void resume_robot_movement(){
+    // load previous robot set-point position
+    set_setpoint_robot_position(set_point_position_in_stop_mode);
+    // set program state to running
+    set_program_state(ProgramState::RUNNING);
 }
 
 // Function to close program when closing signal was detected
@@ -36,11 +55,8 @@ static void interprocess_exit_handler(int input_signal){
 static void emergency_stop_handler(int input_signal){
     // change program state to EMERGENCY STOP
     set_program_state(ProgramState::EMERGENCY_STOP);
-    // read current robot position
-    robot_joint_position_t curr_pos;
-    get_current_robot_position(curr_pos);
-    // lock robot at current position
-    set_setpoint_robot_position(curr_pos);
+    // lock robot movement
+    lock_robot_movement();
     // Send message to log and console
     write_to_console("External emergency stop detected!");
     write_to_log("External emergency stop detected!");

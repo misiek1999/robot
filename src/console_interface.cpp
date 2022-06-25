@@ -111,7 +111,7 @@ void read_control_from_console(){
             set_program_state(ProgramState::CLOSE_PROGRAM);  // Close program after press 'q'
             break;
         case 't':
-            stop_robot_movement();  // Stop program after press 't'
+            stop_robot();  // Stop program after press 't'
             break;
         case 'q':
             send_manual_control(ManualModeControlInstruction::joint_1_left);  // Turn 1 joint
@@ -283,7 +283,7 @@ static void console_stop_handler(int input_signal){
             set_program_state(ProgramState::CLOSE_PROGRAM);
         } else if (c == 'r') {
             symbol_detected = true; // if char 'c' is detected then close application
-            set_program_state(ProgramState::RUNNING);
+            resume_robot_movement();
             write_to_console("\r\nProgram resumed");
         }
     }
