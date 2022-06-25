@@ -121,21 +121,21 @@ void if_instruction(InstructionData _data, instruction_iterator_t &instr_numb, b
     data_to_compare = _data.if_data.data_to_compare;
     // Compare data
     if (digital_input == data_to_compare){  // if data are correct then jump
-        instr_numb = _data.if_data.address_to_jump;
+        instr_numb = _data.if_data.address_to_jump + 1;
         jump_flag = true;
         char buff [40];
-        sprintf(buff, "If true. Jump to: %d", instr_numb);
+        sprintf(buff, "If condition true. Jump to: %d", instr_numb);
         write_to_console(buff);
         write_to_log(buff);
     }else
     {
-        write_to_console("If: false");
-        write_to_log("If: false");
+        write_to_console("If condition false");
+        write_to_log("If condition false");
     }
 }
 
 void jump_instruction(InstructionData _data, instruction_iterator_t &instr_numb, bool &jump_flag){
-    instr_numb = _data.if_data.address_to_jump;
+    instr_numb = _data.if_data.address_to_jump + 1;
     jump_flag = true;
     char buff [40];
     sprintf(buff, "Jump to: %d", instr_numb);

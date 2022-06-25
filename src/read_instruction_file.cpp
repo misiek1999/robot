@@ -42,6 +42,7 @@ int read_instruction_data(std::istringstream &_iss, TrajectoryInstruction &_inst
     char buff[64]; // cstring buffer
     char invalid_args_message[64]; // invalid arguments message to console
     sprintf(invalid_args_message, "Invalid instruction arguments at: %ld", _instr_line);
+    std::string words[3];   // buffer for string data
     InstructionData data;
     // try to read instruction
     switch (_instr.instruction) {
@@ -58,22 +59,27 @@ int read_instruction_data(std::istringstream &_iss, TrajectoryInstruction &_inst
             }
             break;
         case Trajectory_instruction_set::WRITE_DIGITAL:
-            if (!(_iss >> data.digital_data)){
+            if (!(_iss >> words[0])){
                 printf(invalid_args_message);
                 return -1;
-            }
+            }else
+                data.digital_data = std::stoi(words[0]);
             break;
         case Trajectory_instruction_set::IF:
-            if (!(_iss >> data.if_data.data_to_compare >> data.if_data.address_to_jump)) {
+            if (!(_iss >> words[0] >> words[1])) {
                 printf(invalid_args_message);
                 return -1;
+            }else{
+                data.if_data.data_to_compare = std::stoi(words[0]);
+                data.if_data.address_to_jump = std::stoi(words[1]);
             }
             break;
         case Trajectory_instruction_set::JUMP:
-            if (!(_iss >> data.jump_data)) {
+            if (!(_iss >> words[0])) {
                 printf(invalid_args_message);
                 return -1;
-            }
+            }else
+                data.jump_data = std::stoi(words[0]);
             break;
         case Trajectory_instruction_set::WAIT:
             if (!(_iss >> data.wait_data)) {

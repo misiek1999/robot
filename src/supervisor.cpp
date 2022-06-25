@@ -93,7 +93,7 @@ void set_program_state(const ProgramState _state_to_set){
 
 // Supervisor thread function
 void * program_supervisor(void *pVoid){
-    // get self pthread id
+    // get supervisor pthread id
     supevisor_thread_id = pthread_self();
     // Init thread priority
     int policy;     //Scheduling policy: FIFO or RR
