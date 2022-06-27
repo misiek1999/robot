@@ -6,9 +6,6 @@
 // Manual mode position change value
 #define MANUAL_MODE_CONTROL_CHANGE_VALUE 1.0f;
 
-// barrier to lock trajectory barrier
-pthread_barrier_t trajectory_barrier;
-
 // global state of loading trajectory from file
 std::atomic<bool> is_file_trajectory_load;
 
@@ -91,10 +88,6 @@ void auto_control(){
        execute_instructions();// execute next instructions
      }
  }
-
-void wake_up_dummy_function(int input_signal){
-    return;
-}
 
 // Function to run trajectory generator in new thread
 void* generate_trajectory(void *pVoid){

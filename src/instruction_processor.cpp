@@ -242,12 +242,5 @@ void execute_instructions(){
         if (!stop_auto_instruction_iterator)
             ++instruction_number_iterator;
 
-        // If selected instruction is go_ptp, block thread until reach set point position
-        if (instruction == Trajectory_instruction_set::GO_PTP){
-            // enable flag with new position selected
-            new_position_selected = true;
-            // Block this thread until reach set point position
-            pthread_barrier_wait(&trajectory_barrier);
-        }
     }
 }

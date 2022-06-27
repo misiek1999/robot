@@ -23,9 +23,6 @@
 #include "controll_interface.h"
 #include "instruction_processor.h"
 
-// barrier to lock trajectory barrier
-extern pthread_barrier_t trajectory_barrier;
-
 // global state of loading trajectory from file
 extern std::atomic<bool> is_file_trajectory_load;
 

@@ -108,16 +108,6 @@ void receive_robot_position_packet(){
         memcpy(current_robot_position, received_packet.received_position, sizeof(received_packet.received_position));
         // unlock robot current joint position mutex
         current_robot_position_mutex.unlock();
-        // unblock trajectory thread in AUTO mode
-        if(robot_trajectory_mode == Trajectory_control_type::AUTO){
-            // check is set point position is reached
-            bool current_position_status = is_position_reached();
-            // if set point position is reached then unlock barrier
-            if(current_position_status == true and new_position_selected == true)
-                pthread_barrier_wait(&trajectory_barrier);
-                // disable flag with new position selected
-                new_position_selected = false;
-        }
     }
 }
 
@@ -159,9 +149,6 @@ void* communicate_with_robot(void* _arg_input) {
     pthread_getschedparam( pthread_self(), &policy, &param);
     param.sched_priority = sched_get_priority_max(policy) - 2;  // Read max value for thread priority
     pthread_setschedparam( pthread_self(), policy, &param);   //set max -2 thread priority for this thread
-
-    // Init posix thread barrier
-    pthread_barrier_init(&trajectory_barrier, NULL, 2);
 
     // Initialize communication with robot
     initialize_robot_communication();
