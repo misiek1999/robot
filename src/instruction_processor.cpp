@@ -241,6 +241,11 @@ void execute_instructions(){
         // If jump instruction was not executed then increase instruction number by 1
         if (!stop_auto_instruction_iterator)
             ++instruction_number_iterator;
-
+        // wait until position in go_ptp is reached
+        while(instruction == Trajectory_instruction_set::GO_PTP){
+            std::this_thread::sleep_for(std::chrono::milliseconds(10)); // sleep thread for 10ms
+            if (is_position_reached())
+                break;
+        }
     }
 }
