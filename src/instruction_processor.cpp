@@ -248,8 +248,6 @@ void execute_instructions(){
             new_position_selected = true;
             // Block this thread until reach set point position
             pthread_barrier_wait(&trajectory_barrier);
-            // disable flag with new position selected
-            new_position_selected = false;
         }
     }
 }

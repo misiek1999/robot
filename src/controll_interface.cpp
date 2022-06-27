@@ -115,6 +115,8 @@ void receive_robot_position_packet(){
             // if set point position is reached then unlock barrier
             if(current_position_status == true and new_position_selected == true)
                 pthread_barrier_wait(&trajectory_barrier);
+                // disable flag with new position selected
+                new_position_selected = false;
         }
     }
 }

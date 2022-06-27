@@ -1,9 +1,9 @@
 fine 10 10 10 10
 write_digital 1
 if 1 4
-jump 5 
+jump 5
 stop
 wait 1000
 resume
-go_ptp 12 34 56
+go_ptp 127 0 0
 exit
