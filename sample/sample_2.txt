@@ -5,5 +5,5 @@ jump 5
 stop
 wait 1000
 resume
-go_ptp 127 0 0
+go_ptp 12 34 56
 exit
