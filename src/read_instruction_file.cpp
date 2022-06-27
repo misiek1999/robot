@@ -36,6 +36,15 @@ Trajectory_instruction_set change_string_to_instruction(std::string word){
 }
 
 /*
+ * Return true if instruction number is valid.
+ */
+bool check_instruction_count(instruction_iterator_t _instr){
+    if(_instr > 0 && _instr <= MAX_INSTRUCTION_PER_TRAJECTORY)
+        return true;
+    return false;
+}
+
+/*
  * Read instruction data from given string
  */
 int read_instruction_data(std::istringstream &_iss, TrajectoryInstruction &_instr, size_t _instr_line) {
@@ -72,6 +81,8 @@ int read_instruction_data(std::istringstream &_iss, TrajectoryInstruction &_inst
             }else{
                 data.if_data.data_to_compare = std::stoi(words[0]);
                 data.if_data.address_to_jump = std::stoi(words[1]);
+                if (!check_instruction_count(data.if_data.address_to_jump))
+                    return -2;
             }
             break;
         case Trajectory_instruction_set::JUMP:
@@ -80,6 +91,8 @@ int read_instruction_data(std::istringstream &_iss, TrajectoryInstruction &_inst
                 return -1;
             }else
                 data.jump_data = std::stoi(words[0]);
+            if (!check_instruction_count(data.jump_data))
+                return -2;
             break;
         case Trajectory_instruction_set::WAIT:
             if (!(_iss >> data.wait_data)) {
