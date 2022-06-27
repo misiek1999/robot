@@ -51,6 +51,11 @@ char mes_que_name_3[20] = "/mes_que_traj";
 
 // Main function
 int main() {
+    // clear all buffers
+    std::cin.clear();
+    fflush(stdin);
+    fflush(stdout);
+
     // Initialize all message queue in main thread before launching other thread to avoid access error
     if (!setup_all_mes_queues())// If initialization failed then stop application
         exit(EXIT_FAILURE);

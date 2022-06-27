@@ -56,7 +56,7 @@ int read_instruction_data(std::istringstream &_iss, TrajectoryInstruction &_inst
     // try to read instruction
     switch (_instr.instruction) {
         case Trajectory_instruction_set::GO_PTP:
-            if (!(_iss >> data.go_ptp_data[0] >> data.go_ptp_data[2] >> data.go_ptp_data[2])) {
+            if (!(_iss >> data.go_ptp_data[0] >> data.go_ptp_data[1] >> data.go_ptp_data[2])) {
                 printf(invalid_args_message);
                 return -1;
             }
